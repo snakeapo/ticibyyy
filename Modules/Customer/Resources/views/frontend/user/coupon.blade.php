@@ -30,11 +30,12 @@
                                     ][$take->coupon_scope] ?? '-' }}</p>
                                     </div>
                                     <p class="fs-xs"> {{ $take->description }}</p>
-                                    <div class="h6 mb-1">{{ $take->coupon_code }}</div>
-                                    <div class="text-danger fs-xs">Kullanıldı</div>
+                                    <div class="h6 mb-1 js-coupon-code">{{ $take->coupon_code }}</div>
+                                    @php($isUsed = in_array((int) $take->id, $usedCouponIds ?? [], true))
+                                    <div class="{{ $isUsed ? 'text-danger' : 'text-success' }} fs-xs">{{ $isUsed ? 'Kullanıldı' : 'Kullanılmadı' }}</div>
                                 </div>
                                 <div class="card-footer d-flex gap-3 bg-transparent border-0 pt-0 pb-4">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary">Kopyala</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary js-copy-coupon">Kopyala</button>
                                 </div>
                             </div>
                         </div>
@@ -71,3 +72,28 @@
     </div>
 
 @endsection
+
+@push('js')
+<script>
+document.querySelectorAll('.js-copy-coupon').forEach(function (button) {
+    button.addEventListener('click', async function () {
+        const card = button.closest('.card');
+        const code = card?.querySelector('.js-coupon-code')?.textContent?.trim();
+        if (!code) {
+            return;
+        }
+
+        try {
+            await navigator.clipboard.writeText(code);
+            const originalText = button.textContent;
+            button.textContent = 'Kopyalandı!';
+            setTimeout(function () {
+                button.textContent = originalText;
+            }, 1200);
+        } catch (e) {
+            window.prompt('Kupon kodunu kopyalayın:', code);
+        }
+    });
+});
+</script>
+@endpush

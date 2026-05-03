@@ -9,6 +9,7 @@ use App\Models\Basketitems;
 use App\Models\Baskets;
 use App\Models\Cargos;
 use App\Models\Coupons;
+use App\Models\CouponUsage;
 use App\Models\Orderitems;
 use App\Models\Orders;
 use App\Models\Products;
@@ -63,6 +64,10 @@ class MasterController extends Controller
 
             if (!$findCp) {
                 return back()->with('error', 'Kupon Geçersiz veya ürün için kullanılamaz!');
+            }
+
+            if ($this->hasUserUsedCoupon(Auth::id(), (int) $findCp->id)) {
+                return back()->with('error', 'Bu kuponu daha önce kullandınız, tekrar kullanılamaz.');
             }
         }
 
@@ -140,6 +145,10 @@ class MasterController extends Controller
             return back()->with('error', 'Kupon geçersiz veya sepet için kullanılamaz!');
         }
 
+        if ($this->hasUserUsedCoupon(Auth::id(), (int) $coupon->id)) {
+            return back()->with('error', 'Bu kuponu daha önce kullandınız, tekrar kullanılamaz.');
+        }
+
         DB::transaction(function () use ($basket, $coupon) {
             if ($basket->coupon_id && (int) $basket->coupon_id !== (int) $coupon->id) {
                 $oldCoupon = Coupons::find($basket->coupon_id);
@@ -209,12 +218,27 @@ class MasterController extends Controller
                 ]);
             }
 
-            Orders::create([
+            $order = Orders::create([
                 'user_id' => $user->id,
                 'order_no' => $orderToken,
                 'status' => '0',
                 'total' => $basketSum,
             ]);
+
+            $usedCouponIds = $findBasketItems->pluck('coupon')->filter()->map(fn ($id) => (int) $id)->unique()->values();
+            if ($findBasket->coupon_id) {
+                $usedCouponIds->push((int) $findBasket->coupon_id);
+            }
+
+            foreach ($usedCouponIds->unique() as $usedCouponId) {
+                CouponUsage::firstOrCreate([
+                    'user_id' => $user->id,
+                    'coupon_id' => $usedCouponId,
+                ], [
+                    'order_id' => $order->id,
+                    'order_no' => (string) $orderToken,
+                ]);
+            }
 
             if ($findBasket->coupon_id) {
                 $coupon = Coupons::find($findBasket->coupon_id);
@@ -689,6 +713,11 @@ class MasterController extends Controller
             'old_total' => (string) $lineSubTotal,
             'total' => (string) $lineTotal,
         ]);
+    }
+
+    private function hasUserUsedCoupon(int $userId, int $couponId): bool
+    {
+        return CouponUsage::where('user_id', $userId)->where('coupon_id', $couponId)->exists();
     }
 
     private function releaseItemCoupon(Basketitems $item): void

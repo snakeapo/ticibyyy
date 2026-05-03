@@ -5,6 +5,7 @@ namespace Modules\Customer\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Address;
 use App\Models\Coupons;
+use App\Models\CouponUsage;
 use App\Models\Favories;
 use App\Models\Orderitems;
 use App\Models\Orders;
@@ -146,8 +147,10 @@ class MasterController extends Controller
 
     public function  my_coupon()
     {
-        $data = Coupons::where('status',1)->where('hide',1)->where('coupon_quantity','>',0)->paginate(10);
-        return view('customer::frontend.user.coupon',compact('data'));
+        $data = Coupons::where('status',1)->where('hide',1)->paginate(10);
+        $usedCouponIds = CouponUsage::where('user_id', Auth::id())->pluck('coupon_id')->map(fn ($id) => (int) $id)->toArray();
+
+        return view('customer::frontend.user.coupon',compact('data', 'usedCouponIds'));
     }
 
     //Order
