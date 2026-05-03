@@ -1,0 +1,12 @@
+{
+    "Blog": true,
+    "Blogcategory": true,
+    "Product": true,
+    "Category": true,
+    "Page": true,
+    "Order": true,
+    "Productother": true,
+    "Customer": true,
+    "Setting": true,
+    "Auction": true
+}

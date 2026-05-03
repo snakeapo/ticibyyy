@@ -1,0 +1,30 @@
+.color-options {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.color-item {
+    cursor: pointer;
+    text-align: center;
+}
+
+.color-item input {
+    display: none;
+}
+
+.color-box {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+    display: inline-block;
+}
+
+.color-item input:checked + .color-box {
+    border: 2px solid black;
+}
+
+.color-item input:disabled + .color-box {
+    opacity: 0.3;
+}

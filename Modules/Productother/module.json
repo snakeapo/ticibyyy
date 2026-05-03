@@ -1,0 +1,11 @@
+{
+    "name": "Productother",
+    "alias": "productother",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Productother\\Providers\\ProductotherServiceProvider"
+    ],
+    "files": []
+}
