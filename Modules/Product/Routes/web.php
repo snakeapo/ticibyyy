@@ -26,6 +26,8 @@ Route::prefix('spanel')->middleware(['auth', 'admin'])->controller(ProductBacken
     Route::post('/product-update/{id}', 'product_update')->name('product_update');
     Route::delete('/product-delete/{id}', 'product_delete')->name('product_delete');
     Route::get('/product-related/{id}', 'product_related')->name('product_related');
+    Route::post('/product-related/{id}/add', 'product_related_add')->name('product_related_add');
+    Route::delete('/product-related/{id}/remove/{relatedId}', 'product_related_remove')->name('product_related_remove');
     Route::get('/collections', 'collections')->name('collections');
     Route::get('/get-sub-categories', 'getSubCategories')->name('getSubCategories');
 });
