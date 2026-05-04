@@ -9,21 +9,22 @@
 @endsection
 @section('content')
     @php
-        $variants = \App\Models\Productvars::where('product_token',$data->product_token)->get();
-        $variantGroups = $variants->groupBy(function ($variant) {
-            return $variant->variant_type ?: 'Genel';
-        });
-        $galleryImages = collect([$data->image])
-            ->merge(
-                \App\Models\Images::where('product_token', $data->product_token)
-                    ->pluck('image')
-            )
-            ->filter()
-            ->unique()
-            ->values();
-        $variantGalleryItems = $variants->filter(function ($variant) {
-            return !empty($variant->variant_image);
-        });
+        $finalPrice = $data->sale_price ?? $data->price;
+            $variants = \App\Models\Productvars::where('product_token',$data->product_token)->get();
+            $variantGroups = $variants->groupBy(function ($variant) {
+                return $variant->variant_type ?: 'Genel';
+            });
+            $galleryImages = collect([$data->image])
+                ->merge(
+                    \App\Models\Images::where('product_token', $data->product_token)
+                        ->pluck('image')
+                )
+                ->filter()
+                ->unique()
+                ->values();
+            $variantGalleryItems = $variants->filter(function ($variant) {
+                return !empty($variant->variant_image);
+            });
     @endphp
 
     @include('product::frontend.product.new.detail')
@@ -197,9 +198,16 @@
                 const syncSliderByVariant = (variantId) => {
                     if (!variantId) return;
 
-                    document.querySelectorAll('.thumbnail').forEach((slide, index) => {
+                    const slides = document.querySelectorAll('.swiper .swiper-slide');
+
+                    slides.forEach((slide, index) => {
                         if (slide.dataset.variantId == variantId) {
-                            $('.product-large-thumbnail-4').slick('slickGoTo', index);
+
+                            const swiperEl = document.querySelector('.swiper');
+                            if (swiperEl && swiperEl.swiper) {
+                                swiperEl.swiper.slideToLoop(index); // loop varsa bu önemli
+                            }
+
                         }
                     });
                 };

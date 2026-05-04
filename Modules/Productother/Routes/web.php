@@ -6,7 +6,6 @@ use Modules\Productother\Http\Controllers\Frontend\MasterController as ProductOt
 
 Route::controller(ProductOtherFrontendController::class)->group(function () {
     Route::get('/favorilere-kaydet/{urun_no}', 'product_favories')->name('product_favories');
-    Route::get('/favori-kaldir/{id}', 'favories_delete')->name('favories_delete');
     Route::get('/compare', 'compare_index')->name('compare_index');
     Route::get('/compare-add/{urun_no}', 'compare_post')->name('compare_post');
     Route::get('/compare-delete/{id}', 'compare_delete')->name('compare_delete');

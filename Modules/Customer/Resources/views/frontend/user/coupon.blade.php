@@ -23,11 +23,7 @@
                                 <div class="card-body pb-3">
                                     <div class="d-flex align-items-start fs-sm justify-content-between mb-4">
                                         {{ $take->coupon_name }}
-                                        <p class="badge text-body-emphasis bg-secondary-subtle fs-xs"> {{ [
-                                        'both' => 'Ürün + Sepet',
-                                        'product' => 'Sadece Ürün',
-                                        'cart' => 'Sadece Sepet',
-                                    ][$take->coupon_scope] ?? '-' }}</p>
+                                        <p class="badge text-body-emphasis bg-secondary-subtle fs-xs">@if($take->discount_type == 'fixed') {{ $take->coupon_ratio }} TL @else {{ $take->coupon_ratio }}% @endif indirim</p>
                                     </div>
                                     <p class="fs-xs"> {{ $take->description }}</p>
                                     <div class="h6 mb-1 js-coupon-code">{{ $take->coupon_code }}</div>
@@ -73,27 +69,30 @@
 
 @endsection
 
-@push('js')
-<script>
-document.querySelectorAll('.js-copy-coupon').forEach(function (button) {
-    button.addEventListener('click', async function () {
-        const card = button.closest('.card');
-        const code = card?.querySelector('.js-coupon-code')?.textContent?.trim();
-        if (!code) {
-            return;
-        }
+@section('js')
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll(".js-copy-coupon").forEach(function (button) {
+                button.addEventListener("click", function () {
+                    const card = button.closest(".card");
+                    const codeEl = card.querySelector(".js-coupon-code");
+                    const code = codeEl.innerText.trim();
 
-        try {
-            await navigator.clipboard.writeText(code);
-            const originalText = button.textContent;
-            button.textContent = 'Kopyalandı!';
-            setTimeout(function () {
-                button.textContent = originalText;
-            }, 1200);
-        } catch (e) {
-            window.prompt('Kupon kodunu kopyalayın:', code);
-        }
-    });
-});
-</script>
-@endpush
+                    navigator.clipboard.writeText(code).then(function () {
+                        const originalText = button.innerHTML;
+
+                        button.innerHTML = "✔ Kopyalandı";
+                        button.classList.remove("btn-outline-secondary");
+                        button.classList.add("btn-success");
+
+                        setTimeout(function () {
+                            button.innerHTML = "Kopyala";
+                            button.classList.remove("btn-success");
+                            button.classList.add("btn-outline-secondary");
+                        }, 5000);
+                    });
+                });
+            });
+        });
+    </script>
+@endsection

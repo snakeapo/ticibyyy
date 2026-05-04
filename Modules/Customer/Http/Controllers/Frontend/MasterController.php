@@ -86,6 +86,14 @@ class MasterController extends Controller
         return view('customer::frontend.user.favories',compact('data'));
     }
 
+    public function favories_delete($id)
+    {
+        $data = Favories::where('id',$id)->where('user_id',Auth::user()->id)->firstOrFail();
+        $data->delete();
+
+        return back()->with('success','Ürün favorilerden silindi');
+    }
+
     public function my_address()
     {
         $data = Address::where('user_id',Auth::user()->id)->get();

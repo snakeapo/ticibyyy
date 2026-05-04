@@ -55,15 +55,20 @@
             <div class="w-100 min-w-0 px-2 pb-3">
 
                 {{-- Yıldızlar (sen doldur) --}}
-                <div class="d-flex align-items-center gap-2 mb-2">
+                <div class="d-flex align-items-center gap-2 mt-2 mb-2">
                     <div class="d-flex gap-1 fs-xs">
-                        <i class="ci-star-filled text-warning"></i>
-                        <i class="ci-star-filled text-warning"></i>
-                        <i class="ci-star-filled text-warning"></i>
-                        <i class="ci-star-filled text-warning"></i>
-                        <i class="ci-star-half text-warning"></i>
+                        @php
+                            $averageRating = Modules\Product\Http\Controllers\Frontend\MasterController::calculateAverageRating($take->id);
+                        @endphp
+                        @for ($i = 1; $i <= 5; $i++)
+                            @if ($i <= $averageRating)
+                                <i class="ci-star-filled text-warning"></i>
+                            @else
+                                <i class="ci-star text-warning"></i>
+                            @endif
+                        @endfor
                     </div>
-                    <span class="text-body-tertiary fs-xs">(14)</span>
+                    <span class="text-body-tertiary fs-xs">({{ \App\Models\Productcoms::where('status',1)->where('product_token',$take->product_token)->count() }})</span>
                 </div>
 
                 {{-- Title --}}

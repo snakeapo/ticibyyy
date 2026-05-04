@@ -27,6 +27,7 @@ Route::prefix('hesap')->middleware('auth')->controller(CustomerFrontendControlle
 
     Route::get('/indirim-kuponlarim','my_coupon')->name('my_coupon');
     Route::get('/favoriler', 'favories_page')->name('favories_page');
+    Route::delete('/favories-delete/{id}', 'favories_delete')->name('favories_delete');
 });
 
 Route::prefix('spanel')->middleware(['auth', 'admin'])->controller(CustomerBackendController::class)->group(function () {

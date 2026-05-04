@@ -9,9 +9,8 @@ class Pasts extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'ip_address',
+        'user_id',
         'product_id',
-        'product_token',
     ];
 
     public function getProduct()

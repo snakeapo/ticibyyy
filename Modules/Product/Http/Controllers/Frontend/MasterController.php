@@ -3,6 +3,7 @@
 namespace Modules\Product\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Models\Cargos;
 use App\Models\Pasts;
 use App\Models\Brands;
 use App\Models\Productcoms;
@@ -10,6 +11,7 @@ use App\Models\Products;
 use App\Models\Ranges;
 use App\Models\Stocks;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Modules\Product\Http\Requests\Frontend\StokBildirRequest;
 
 class MasterController extends Controller
@@ -39,19 +41,49 @@ class MasterController extends Controller
             ->where('status', 1)
             ->firstOrFail();
 
-        $existingRecord = Pasts::where('ip_address', $_SERVER['REMOTE_ADDR'])
-            ->where('product_id', $data->id)
-            ->first();
+        $cargo = Cargos::get();
 
-        if (!$existingRecord) {
-            Pasts::create([
-                'ip_address' => $_SERVER['REMOTE_ADDR'],
-                'product_id' => $data->id,
-                'product_token' => $data->product_token,
-            ]);
+        // ✅ Yorumları çek
+        $reviews = \App\Models\Productcoms::where('product_token', $productToken)
+            ->where('status', '1')
+            ->get();
+
+        $totalReviews = $reviews->count();
+        $avgRating = $reviews->avg('point') ?? 0;
+
+        // ✅ Yıldız dağılımı
+        $ratings = [
+            5 => $reviews->where('point', 5)->count(),
+            4 => $reviews->where('point', 4)->count(),
+            3 => $reviews->where('point', 3)->count(),
+            2 => $reviews->where('point', 2)->count(),
+            1 => $reviews->where('point', 1)->count(),
+        ];
+
+        // Kullanıcı giriş yaptıysa geçmişe ekle
+        if (Auth::check()) {
+            Pasts::updateOrCreate(
+                [
+                    'user_id' => Auth::user()->id,
+                    'product_id' => $data->id,
+                ],
+                [
+                    'updated_at' => now(),
+                ]
+            );
         }
 
-        return view('product::frontend.product.detail', compact('data'));
+        $comment = Productcoms::orderBy('id','desc')->where('product_id', $data->id)->limit(3);
+
+        return view('product::frontend.product.detail', compact(
+            'data',
+            'cargo',
+            'reviews',
+            'totalReviews',
+            'avgRating',
+            'ratings',
+            'comment'
+        ));
     }
 
     public function product_detail_comment($slug)

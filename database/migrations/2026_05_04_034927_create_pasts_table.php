@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('pasts', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreignId('product_id')->references('id')->on('products')->onDelete('cascade');
             $table->timestamps();
-            $table->string('ip_address');
-            $table->string('product_token');
         });
     }
 
