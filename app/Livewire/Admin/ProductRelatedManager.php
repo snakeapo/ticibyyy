@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin;
 
 use App\Models\Products;
+use App\Models\ProductRelatedProduct;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -26,7 +27,14 @@ class ProductRelatedManager extends Component
 
     public function mount(int $productId): void
     {
-        $this->product = Products::query()->with('getCategory:id,category_title')->findOrFail($productId);
+        $this->product = Products::query()
+            ->with([
+                'getCategory:id,category_title',
+                'getSubCategory:id,sub_title,parent_id,top_category',
+                'getSubCategory.parent:id,sub_title,parent_id,top_category',
+                'getBrand:id,brand_title',
+            ])
+            ->findOrFail($productId);
     }
 
     public function updatingSearch(): void
@@ -55,18 +63,24 @@ class ProductRelatedManager extends Component
             return;
         }
 
-        $selectedIds = $this->product->relatedProducts()->pluck('products.id');
+        $selectedIds = ProductRelatedProduct::query()
+            ->where('product_id', $this->product->id)
+            ->pluck('related_product_id');
         if ($selectedIds->count() >= 5) {
             session()->flash('error', 'Bir ürün için en fazla 5 önerilen ürün seçebilirsiniz.');
             return;
         }
 
         DB::transaction(function () use ($relatedProductId) {
-            $this->product->relatedProducts()->syncWithoutDetaching([$relatedProductId]);
+            ProductRelatedProduct::query()->firstOrCreate([
+                'product_id' => $this->product->id,
+                'related_product_id' => $relatedProductId,
+            ]);
 
-            Products::query()->findOrFail($relatedProductId)
-                ->relatedProducts()
-                ->syncWithoutDetaching([$this->product->id]);
+            ProductRelatedProduct::query()->firstOrCreate([
+                'product_id' => $relatedProductId,
+                'related_product_id' => $this->product->id,
+            ]);
         });
 
         session()->flash('success', 'Ürün bağlantısı eklendi.');
@@ -76,11 +90,15 @@ class ProductRelatedManager extends Component
     public function removeRelatedProduct(int $relatedProductId): void
     {
         DB::transaction(function () use ($relatedProductId) {
-            $this->product->relatedProducts()->detach($relatedProductId);
+            ProductRelatedProduct::query()
+                ->where('product_id', $this->product->id)
+                ->where('related_product_id', $relatedProductId)
+                ->delete();
 
-            Products::query()->findOrFail($relatedProductId)
-                ->relatedProducts()
-                ->detach($this->product->id);
+            ProductRelatedProduct::query()
+                ->where('product_id', $relatedProductId)
+                ->where('related_product_id', $this->product->id)
+                ->delete();
         });
 
         session()->flash('success', 'Ürün bağlantısı kaldırıldı.');
@@ -89,12 +107,19 @@ class ProductRelatedManager extends Component
 
     public function render()
     {
-        $relatedIds = $this->product->relatedProducts()->pluck('products.id');
+        $relatedIds = ProductRelatedProduct::query()
+            ->where('product_id', $this->product->id)
+            ->pluck('related_product_id');
 
         $availableProducts = Products::query()
             ->where('id', '!=', $this->product->id)
-            ->where('category', $this->product->category)
             ->whereNotIn('id', $relatedIds)
+            ->with([
+                'getCategory:id,category_title',
+                'getSubCategory:id,sub_title,parent_id,top_category',
+                'getSubCategory.parent:id,sub_title,parent_id,top_category',
+                'getBrand:id,brand_title',
+            ])
             ->when($this->search !== '', function ($query) {
                 $term = trim($this->search);
                 $query->where(function ($subQuery) use ($term) {
@@ -107,6 +132,12 @@ class ProductRelatedManager extends Component
 
         $selectedProducts = Products::query()
             ->whereIn('id', $relatedIds)
+            ->with([
+                'getCategory:id,category_title',
+                'getSubCategory:id,sub_title,parent_id,top_category',
+                'getSubCategory.parent:id,sub_title,parent_id,top_category',
+                'getBrand:id,brand_title',
+            ])
             ->when($this->selectedSearch !== '', function ($query) {
                 $term = trim($this->selectedSearch);
                 $query->where(function ($subQuery) use ($term) {

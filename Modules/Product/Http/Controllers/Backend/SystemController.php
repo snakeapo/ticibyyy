@@ -9,6 +9,7 @@ use App\Models\Productvars;
 use App\Models\Categories;
 use App\Models\Brands;
 use App\Models\Subcategories;
+use App\Models\ProductRelatedProduct;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
@@ -54,11 +55,80 @@ class SystemController extends Controller
 
     public function product_related($id)
     {
-        Products::query()->findOrFail($id);
+        $product = Products::query()
+            ->with(['getCategory:id,category_title'])
+            ->findOrFail($id);
+
+        $search = request('search', '');
+        $selectedSearch = request('selected_search', '');
+        $relatedIds = ProductRelatedProduct::query()
+            ->where('product_id', $product->id)
+            ->pluck('related_product_id');
+
+        $availableProducts = Products::query()
+            ->where('id', '!=', $product->id)
+            ->whereNotIn('id', $relatedIds)
+            ->with(['getCategory:id,category_title', 'getSubCategory:id,sub_title,parent_id', 'getSubCategory.parent:id,sub_title', 'getBrand:id,brand_title'])
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($subQuery) use ($search) {
+                    $subQuery->where('title', 'like', '%' . trim($search) . '%')
+                        ->orWhere('product_token', 'like', '%' . trim($search) . '%');
+                });
+            })
+            ->latest('id')
+            ->paginate(15, ['*'], 'available_page')
+            ->withQueryString();
+
+        $selectedProducts = Products::query()
+            ->whereIn('id', $relatedIds)
+            ->with(['getCategory:id,category_title', 'getSubCategory:id,sub_title,parent_id', 'getSubCategory.parent:id,sub_title', 'getBrand:id,brand_title'])
+            ->when($selectedSearch !== '', function ($query) use ($selectedSearch) {
+                $query->where(function ($subQuery) use ($selectedSearch) {
+                    $subQuery->where('title', 'like', '%' . trim($selectedSearch) . '%')
+                        ->orWhere('product_token', 'like', '%' . trim($selectedSearch) . '%');
+                });
+            })
+            ->latest('id')
+            ->paginate(15, ['*'], 'selected_page')
+            ->withQueryString();
 
         return view('product::backend.items.product.related-products', [
-            'productId' => (int) $id,
+            'product' => $product,
+            'availableProducts' => $availableProducts,
+            'selectedProducts' => $selectedProducts,
+            'relatedCount' => $relatedIds->count(),
         ]);
+    }
+
+    public function product_related_add(Request $request, $id)
+    {
+        $product = Products::query()->findOrFail($id);
+        $relatedProductId = (int) $request->input('related_product_id');
+        abort_if($relatedProductId === (int) $product->id, 422);
+
+        $count = ProductRelatedProduct::query()->where('product_id', $product->id)->count();
+        if ($count >= 5) {
+            return back()->with('error', 'Bir ürün için en fazla 5 bağlı ürün seçebilirsiniz.');
+        }
+
+        ProductRelatedProduct::query()->firstOrCreate([
+            'product_id' => $product->id,
+            'related_product_id' => $relatedProductId,
+        ]);
+        ProductRelatedProduct::query()->firstOrCreate([
+            'product_id' => $relatedProductId,
+            'related_product_id' => $product->id,
+        ]);
+
+        return back()->with('success', 'Bağlı ürün eklendi.');
+    }
+
+    public function product_related_remove($id, $relatedId)
+    {
+        ProductRelatedProduct::query()->where('product_id', (int) $id)->where('related_product_id', (int) $relatedId)->delete();
+        ProductRelatedProduct::query()->where('product_id', (int) $relatedId)->where('related_product_id', (int) $id)->delete();
+
+        return back()->with('success', 'Bağlı ürün kaldırıldı.');
     }
 
     public function collections()
