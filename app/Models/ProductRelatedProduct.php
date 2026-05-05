@@ -15,4 +15,9 @@ class ProductRelatedProduct extends Model
         'product_id',
         'related_product_id',
     ];
+
+    public function getProduct()
+    {
+        return $this->hasOne('App\Models\Products','id','related_product_id');
+    }
 }

@@ -1,76 +1,146 @@
 <section class="container pb-5 mb-1 mb-sm-2 mb-md-3 mb-lg-4 mb-xl-5">
     <div class="bg-body-tertiary rounded-5 pt-5">
-        <h2 class="h3 text-center pb-2 py-lg-3">Cheaper together</h2>
+        <h2 class="h3 text-center pb-2 py-lg-3">Bu ürünle iyi gider</h2>
         <div class="row justify-content-center px-4 px-md-0">
             <div class="col-md-10">
                 <div class="overflow-auto" data-simplebar data-simplebar-auto-hide="false">
-                    <div class="d-flex align-items-center justify-content-between pb-4 mb-2" style="min-width: 840px">
+                    <div class="d-flex align-items-center justify-content-between pb-4 mb-2" >
+                        @foreach($relatedProduct as $takeRelatedProduct)
 
-                        <!-- Item -->
-                        <div class="w-100" style="max-width: 306px">
-                            <div class="form-check position-relative p-0 m-0 mb-3">
-                                <input type="checkbox" class="form-check-input position-absolute top-0 end-0 mt-3 me-3" id="iphone" checked disabled>
-                                <label for="iphone" class="d-flex justify-content-center bg-body rounded p-3">
-                        <span class="ratio d-block" style="max-width: 258px; --cz-aspect-ratio: calc(240 / 258 * 100%)">
-                          <img src="assets/img/shop/electronics/14.png" alt="iPhone 14">
-                        </span>
-                                </label>
-                            </div>
-                            <h3 class="mb-2">
-                                <a class="d-block fs-sm fw-medium animate-underline text-truncate" href="#!">
-                                    <span class="animate-target">Apple iPhone 14 128GB White</span>
-                                </a>
-                            </h3>
-                            <div class="h6 mb-0">$940.00</div>
-                        </div>
+                            @php
+                                $price = $takeRelatedProduct->getProduct->price;
+                                $sale = $takeRelatedProduct->getProduct->sale_price;
+                                $stock = $takeRelatedProduct->getProduct->stock;
 
-                        <div class="ci-plus fs-4 mt-n5 mx-3 mx-lg-4"></div>
+                                $hasDiscount = $sale && $sale > 0 && $sale < $price;
+                                $finalPrice = $hasDiscount ? $sale : $price;
 
-                        <!-- Item -->
-                        <div class="w-100" style="max-width: 306px">
-                            <div class="form-check position-relative p-0 m-0 mb-3">
-                                <input type="checkbox" class="form-check-input position-absolute top-0 end-0 mt-3 me-3" id="airpods" checked>
-                                <label for="airpods" class="d-flex justify-content-center bg-body rounded p-3">
-                        <span class="ratio d-block" style="max-width: 258px; --cz-aspect-ratio: calc(240 / 258 * 100%)">
-                          <img src="assets/img/shop/electronics/06.png" alt="AirPods 2 Pro">
-                        </span>
-                                </label>
-                            </div>
-                            <h3 class="mb-2">
-                                <a class="d-block fs-sm fw-medium animate-underline text-truncate" href="#!">
-                                    <span class="animate-target">Headphones Apple AirPods 2 Pro</span>
-                                </a>
-                            </h3>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="badge bg-danger">-32%</span>
-                                <span class="h6 mb-0">$224.00</span>
-                                <del class="text-body-tertiary fs-xs">$330.00</del>
-                            </div>
-                        </div>
+                                // stok yüzdesi (max 100 varsaydık)
+                                $stockPercent = min(($stock / 100) * 100, 100);
+                            @endphp
 
-                        <div class="ci-plus fs-4 mt-n5 mx-3 mx-lg-4"></div>
+                            <div class="col-6 col-md-3">
+                                <div class="product-card animate-underline hover-effect-opacity bg-body rounded">
 
-                        <!-- Item -->
-                        <div class="w-100" style="max-width: 306px">
-                            <div class="form-check position-relative p-0 m-0 mb-3">
-                                <input type="checkbox" class="form-check-input position-absolute top-0 end-0 mt-3 me-3" id="charger">
-                                <label for="charger" class="d-flex justify-content-center bg-body rounded p-3">
-                        <span class="ratio d-block" style="max-width: 258px; --cz-aspect-ratio: calc(240 / 258 * 100%)">
-                          <img src="assets/img/shop/electronics/15.png" alt="Wireless charger">
-                        </span>
-                                </label>
+                                    <div class="position-relative">
+
+
+                                        {{-- İndirim badge --}}
+                                        @if($hasDiscount)
+                                            <div class="position-absolute top-0 start-0 z-2 mt-3 ms-3">
+                                                <span class="badge bg-danger">
+                                                    %{{ $takeRelatedProduct->getProduct->difference }}
+                                                </span>
+                                            </div>
+                                        @endif
+
+                                        {{-- Image --}}
+                                        <a class="d-block rounded-top overflow-hidden p-3 p-sm-4"
+                                           href="{{ route('product_detail', $takeRelatedProduct->getProduct->slug . '-' . $takeRelatedProduct->getProduct->product_token) }}">
+
+                                            <div class="ratio" style="--cz-aspect-ratio: calc(240 / 258 * 100%)">
+                                                <img src="/upload/product/{{ $takeRelatedProduct->getProduct->image }}"
+                                                     onerror="this.src='/extra/img/photo.png'"
+                                                     alt="{{ $takeRelatedProduct->getProduct->title }}">
+                                            </div>
+                                        </a>
+                                    </div>
+
+                                    <div class="w-100 min-w-0 px-2 pb-3">
+
+                                        {{-- Yıldızlar (sen doldur) --}}
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <div class="d-flex gap-1 fs-xs">
+                                                @php
+                                                    $averageRating = Modules\Product\Http\Controllers\Frontend\MasterController::calculateAverageRating($takeRelatedProduct->getProduct->id);
+                                                @endphp
+                                                @for ($i = 1; $i <= 5; $i++)
+                                                    @if ($i <= $averageRating)
+                                                        <i class="ci-star-filled text-warning"></i>
+                                                    @else
+                                                        <i class="ci-star text-warning"></i>
+                                                    @endif
+                                                @endfor
+                                            </div>
+                                            <span class="text-body-tertiary fs-xs">({{ \App\Models\Productcoms::where('status',1)->where('product_token',$takeRelatedProduct->getProduct->product_token)->count() }})</span>
+                                        </div>
+
+                                        {{-- Title --}}
+                                        <h3 class="mb-2">
+                                            <a class="d-block fs-sm fw-medium text-truncate"
+                                               href="{{ route('product_detail', $takeRelatedProduct->getProduct->slug . '-' . $takeRelatedProduct->getProduct->product_token) }}">
+                                                {{ $takeRelatedProduct->getProduct->title }}
+                                            </a>
+                                        </h3>
+
+                                        <div class="d-flex align-items-center justify-content-between mb-2">
+
+                                            <div class="h5 mb-0">
+
+                                                @if($hasDiscount)
+
+                                                    {{-- Eski fiyat ÜSTTE --}}
+                                                    <div class="text-muted fs-xs text-decoration-line-through">
+                                                        {{ number_format($price, 2, ',', '.') }} ₺
+                                                    </div>
+
+                                                    {{-- Yeni fiyat --}}
+                                                    <div class="text-danger fs-sm fw-semibold">
+                                                        {{ number_format($sale, 2, ',', '.') }} ₺
+                                                    </div>
+
+                                                @else
+                                                    <span class="fw-semibold fs-sm">
+                {{ number_format($price, 2, ',', '.') }} ₺
+            </span>
+                                                @endif
+
+                                            </div>
+
+                                            {{-- Sepete ekle --}}
+                                            <a href="{{ route('product_detail', $takeRelatedProduct->getProduct->slug . '-' . $takeRelatedProduct->getProduct->product_token) }}"
+                                               class="product-card-button btn btn-icon btn-secondary">
+                                                <i class="ci-eye"></i>
+                                            </a>
+
+                                        </div>
+                                        {{-- Stok Progress --}}
+                                        @php
+                                            if($stock > 10){
+                                                $stockText = "Stokta var";
+                                                $stockClass = "bg-success";
+                                            } elseif($stock > 3){
+                                                $stockText = "Tükeniyor";
+                                                $stockClass = "bg-warning";
+                                            } elseif($stock > 0){
+                                                $stockText = "Son $stock adet";
+                                                $stockClass = "bg-danger";
+                                            } else {
+                                                $stockText = "Stokta yok";
+                                                $stockClass = "bg-secondary";
+                                            }
+                                        @endphp
+
+                                        <div class="progress mb-1" style="height: 4px">
+                                            <div class="progress-bar {{ $stockClass }}"
+                                                 style="width: {{ $stockPercent }}%">
+                                            </div>
+                                        </div>
+
+                                        <div class="text-body-secondary fs-xs">
+                                            {{ $stockText }}
+                                        </div>
+
+                                    </div>
+                                </div>
                             </div>
-                            <h3 class="mb-2">
-                                <a class="d-block fs-sm fw-medium animate-underline text-truncate" href="#!">
-                                    <span class="animate-target">Wireless charger for iPhone</span>
-                                </a>
-                            </h3>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="badge bg-danger">-48%</span>
-                                <span class="h6 mb-0">$26.00</span>
-                                <del class="text-body-tertiary fs-xs">$50.00</del>
-                            </div>
-                        </div>
+
+
+                            {{-- SON ELEMAN DEĞİLSE + GÖSTER --}}
+                            @if(!$loop->last)
+                                <div class="ci-plus fs-4 mt-n5 mx-3 mx-lg-4"></div>
+                            @endif
+                        @endforeach
                     </div>
                 </div>
             </div>

@@ -12,6 +12,7 @@ class Productcoms extends Model
         'product_id',
         'product_token',
         'user_id',
+        'order_id',
         'comment',
         'point',
         'answer',
@@ -30,5 +31,9 @@ class Productcoms extends Model
     public function getProduct()
     {
         return $this->hasOne('App\Models\Products','id','product_id');
+    }
+    public function getOrder()
+    {
+        return $this->hasOne('App\Models\Orders','id','order_id');
     }
 }

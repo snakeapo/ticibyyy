@@ -457,25 +457,42 @@
             <div class="container d-flex align-items-center">
                 <div class="d-flex align-items-center min-w-0 ms-n2 me-3">
                     <div class="ratio ratio-1x1 flex-shrink-0" style="width: 50px">
-                        <img src="assets/img/shop/electronics/thumbs/10.png" alt="iPhone 14">
+                        <img width="110px" style="height: 100%;" src="/upload/product/{{ $data->image }}"
+                             onerror="this.src='/extra/img/photo.png'"
+                             alt="{{ $data->title }}">
                     </div>
                     <div class="w-100 min-w-0 ps-2">
-                        <h4 class="fs-sm fw-medium text-truncate mb-1">Apple iPhone 14 Plus 128GB Blue</h4>
-                        <div class="h6 mb-0">$940.00</div>
+                        <h4 class="fs-sm fw-medium text-truncate mb-1">{{ $data->title }}</h4>
+                        @if($hasDiscount)
+                            <div class="d-flex align-items-center gap-2">
+
+                                {{-- İndirimli fiyat --}}
+                                <span class="text-danger fw-semibold">
+                                        {{ number_format($sale, 2, ',', '.') }} ₺
+                                    </span>
+
+                                {{-- Eski fiyat --}}
+                                <span class="text-muted text-decoration-line-through fs-sm">
+                                        {{ number_format($price, 2, ',', '.') }} ₺
+                                    </span>
+
+                                {{-- DB’den gelen indirim oranı --}}
+                                <span class="badge bg-danger-subtle text-danger">
+                                        %{{ $data->difference }}
+                                    </span>
+
+                            </div>
+                        @else
+                            {{-- Normal fiyat --}}
+                            <span class="fw-semibold">
+                                    {{ number_format($price, 2, ',', '.') }} ₺
+                                </span>
+                        @endif
+
+                    </div>
                     </div>
                 </div>
-                <div class="d-flex gap-2 ms-auto">
-                    <button type="button" class="btn btn-icon btn-secondary animate-pulse" aria-label="Add to Wishlist">
-                        <i class="ci-heart fs-base animate-target"></i>
-                    </button>
-                    <button type="button" class="btn btn-primary animate-slide-end d-none d-sm-inline-flex">
-                        <i class="ci-shopping-cart fs-base animate-target ms-n1 me-2"></i>
-                        Add to cart
-                    </button>
-                    <button type="button" class="btn btn-icon btn-primary animate-slide-end d-sm-none" aria-label="Add to Cart">
-                        <i class="ci-shopping-cart fs-lg animate-target"></i>
-                    </button>
-                </div>
+
             </div>
         </div>
     </div>
@@ -483,7 +500,9 @@
 
 
 <!-- Bundle discount (Cheaper together) -->
-
+@if($relatedProduct->count() != 0)
+    @include('product::frontend.product.new.include.linked')
+@endif
 
 
 
@@ -510,34 +529,62 @@
                 <div class="border rounded p-3 p-lg-4">
                     <div class="d-flex align-items-center mb-3">
                         <div class="ratio ratio-1x1 flex-shrink-0" style="width: 110px">
-                            <img src="assets/img/shop/electronics/thumbs/10.png" width="110" alt="iPhone 14">
+                            <img width="110px" style="height: 100%;" src="/upload/product/{{ $data->image }}"
+                                 onerror="this.src='/extra/img/photo.png'"
+                                 alt="{{ $data->title }}">
                         </div>
                         <div class="w-100 min-w-0 ps-2 ps-sm-3">
-                            <div class="d-flex align-items-center gap-2 mb-2">
+                            {{-- Yıldızlar (sen doldur) --}}
+                            <div class="d-flex align-items-center gap-2 mt-2 mb-2">
                                 <div class="d-flex gap-1 fs-xs">
-                                    <i class="ci-star-filled text-warning"></i>
-                                    <i class="ci-star-filled text-warning"></i>
-                                    <i class="ci-star-filled text-warning"></i>
-                                    <i class="ci-star-filled text-warning"></i>
-                                    <i class="ci-star text-body-tertiary opacity-75"></i>
+                                    @php
+                                        $averageRating = Modules\Product\Http\Controllers\Frontend\MasterController::calculateAverageRating($data->id);
+                                    @endphp
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        @if ($i <= $averageRating)
+                                            <i class="ci-star-filled text-warning"></i>
+                                        @else
+                                            <i class="ci-star text-warning"></i>
+                                        @endif
+                                    @endfor
                                 </div>
-                                <span class="text-body-tertiary fs-xs">68</span>
+                                <span class="text-body-tertiary fs-xs">({{ \App\Models\Productcoms::where('status',1)->where('product_token',$data->product_token)->count() }})</span>
                             </div>
-                            <h4 class="fs-sm fw-medium mb-2">Apple iPhone 14 Plus 128GB Blue</h4>
-                            <div class="h5 mb-0">$940.00</div>
+                            <h4 class="fs-sm fw-medium mb-2">{{ $data->title }}</h4>
+                            @if($hasDiscount)
+                                <div class="d-flex align-items-center gap-2">
+
+                                    {{-- İndirimli fiyat --}}
+                                    <span class="text-danger fw-semibold">
+                                        {{ number_format($sale, 2, ',', '.') }} ₺
+                                    </span>
+
+                                    {{-- Eski fiyat --}}
+                                    <span class="text-muted text-decoration-line-through fs-sm">
+                                        {{ number_format($price, 2, ',', '.') }} ₺
+                                    </span>
+
+                                    {{-- DB’den gelen indirim oranı --}}
+                                    <span class="badge bg-danger-subtle text-danger">
+                                        %{{ $data->difference }}
+                                    </span>
+
+                                </div>
+                            @else
+                                {{-- Normal fiyat --}}
+                                <span class="fw-semibold">
+                                    {{ number_format($price, 2, ',', '.') }} ₺
+                                </span>
+                            @endif
+
                         </div>
                     </div>
                     <div class="d-flex gap-2 gap-lg-3">
-                        <button type="button" class="btn btn-primary w-100 animate-slide-end">
+                        <a href="#top" class="btn btn-primary w-100 animate-slide-end">
                             <i class="ci-shopping-cart fs-base animate-target ms-n1 me-2"></i>
-                            Add to cart
-                        </button>
-                        <button type="button" class="btn btn-icon btn-secondary animate-pulse" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-sm" data-bs-title="Add to Wishlist" aria-label="Add to Wishlist">
-                            <i class="ci-heart fs-base animate-target"></i>
-                        </button>
-                        <button type="button" class="btn btn-icon btn-secondary animate-rotate" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-sm" data-bs-title="Compare" aria-label="Compare">
-                            <i class="ci-refresh-cw fs-base animate-target"></i>
-                        </button>
+                            Sepete ekle
+                        </a>
+
                     </div>
                 </div>
             </div>

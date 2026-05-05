@@ -7,6 +7,7 @@ use App\Models\Cargos;
 use App\Models\Pasts;
 use App\Models\Brands;
 use App\Models\Productcoms;
+use App\Models\ProductRelatedProduct;
 use App\Models\Products;
 use App\Models\Ranges;
 use App\Models\Stocks;
@@ -73,7 +74,9 @@ class MasterController extends Controller
             );
         }
 
-        $comment = Productcoms::orderBy('id','desc')->where('product_id', $data->id)->limit(3);
+        $relatedProduct = ProductRelatedProduct::where('product_id', $data->id)->get();
+
+        $commentProduct = Productcoms::orderBy('id','desc')->where('product_id', $data->id)->where('status',1)->limit(3)->get();
 
         return view('product::frontend.product.detail', compact(
             'data',
@@ -82,7 +85,8 @@ class MasterController extends Controller
             'totalReviews',
             'avgRating',
             'ratings',
-            'comment'
+            'commentProduct',
+            'relatedProduct'
         ));
     }
 

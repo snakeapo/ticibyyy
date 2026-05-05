@@ -57,14 +57,14 @@
     </div>
 </div>
 
-@forelse($comment as $takeComment)
+@forelse($commentProduct as $takeComment)
     <div class="border-bottom py-3 mb-3">
         <div class="d-flex align-items-center mb-3">
             <div class="text-nowrap me-3">
-                <span class="h6 mb-0">Rafael Marquez</span>
+                <span class="h6 mb-0">Andrew Richards</span>
                 <i class="ci-check-circle text-success align-middle ms-1" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-sm" data-bs-title="Verified customer"></i>
             </div>
-            <span class="text-body-secondary fs-sm ms-auto">June 28, 2024</span>
+            <span class="text-body-secondary fs-sm ms-auto">{{ \Carbon\Carbon::parse($takeComment->created_at)->diffForHumans() }}</span>
         </div>
         <div class="d-flex gap-1 fs-sm pb-2 mb-1">
             <i class="ci-star-filled text-warning"></i>
@@ -74,75 +74,39 @@
             <i class="ci-star-filled text-warning"></i>
         </div>
         <ul class="list-inline gap-2 pb-2 mb-1">
-            <li class="fs-sm me-4"><span class="text-dark-emphasis fw-medium">Color:</span> Blue</li>
+            <li class="fs-sm me-4"><span class="text-dark-emphasis fw-medium">Color:</span> Purple</li>
             <li class="fs-sm"><span class="text-dark-emphasis fw-medium">Model:</span> 128GB</li>
         </ul>
-        <p class="fs-sm">The phone has a new A15 Bionic chip, which makes it lightning-fast and responsive. The camera system has also been upgraded, and it now includes a 12-megapixel ultra-wide lens and a 12-megapixel wide lens.</p>
-        <ul class="list-unstyled fs-sm pb-2 mb-1">
-            <li><span class="text-dark-emphasis fw-medium">Pros:</span> Powerful A15 Bionic chip, improved camera</li>
-            <li><span class="text-dark-emphasis fw-medium">Cons:</span> High price tag</li>
-        </ul>
-        <div class="nav align-items-center">
-            <button type="button" class="nav-link animate-underline px-0">
-                <i class="ci-corner-down-right fs-base ms-1 me-1"></i>
-                <span class="animate-target">Reply</span>
-            </button>
-            <div class="ps-3 pb-2">
-                <div class="d-flex align-items-center pt-3 pb-2 mb-1">
-                    <span class="badge bg-primary me-2">Reply</span>
-                    <span class="h6 mb-0 me-4">Cartzilla Company</span>
-                    <span class="text-body-secondary fs-sm">May 8, 2024</span>
-                </div>
-                <p class="fs-sm mb-0">Thank you for your feedback! We are glad that you were satisfied with your purchase :)</p>
-            </div>
+        <p class="fs-sm">{{ $takeComment->comment }}</p>
+
+        @if($takeComment->image != null)
+        <div class="d-flex gap-2 pt-1 pb-3">
+            <img src="{{ asset('upload/productcomment/'.$takeComment->image) }}" class="d-block rounded-2 me-1" width="86" alt="Image">
         </div>
+        @endif
+        @if($takeComment->answer != null)
+
+
+        <!-- Reply -->
+        <div class="ps-3 pb-2">
+            <div class="d-flex align-items-center pt-3 pb-2 mb-1">
+                <span class="badge bg-primary me-2">Cevap</span>
+                <span class="h6 mb-0 me-4">{{ env('APP_NAME') }}</span>
+                <span class="text-body-secondary fs-sm">{{ \Carbon\Carbon::parse($takeComment->answer_time)->diffForHumans() }}</span>
+            </div>
+            <p class="fs-sm mb-0">{{ $takeComment->answer }}</p>
+        </div>
+        @endif
+
     </div>
 @empty
-
+    <div class="alert d-flex alert-dark" role="alert">
+        <i class="ci-message-circle fs-lg pe-1 mt-1 me-2"></i>
+        <div>Bu ürüne herhangi bir yorum yapılmamış.</div>
+    </div>
 
 @endforelse
 
-
-<!-- Review -->
-<div class="border-bottom py-3 mb-3">
-    <div class="d-flex align-items-center mb-3">
-        <div class="text-nowrap me-3">
-            <span class="h6 mb-0">Daniel Adams</span>
-        </div>
-        <span class="text-body-secondary fs-sm ms-auto">May 15, 2024</span>
-    </div>
-    <div class="d-flex gap-1 fs-sm pb-2 mb-1">
-        <i class="ci-star-filled text-warning"></i>
-        <i class="ci-star-filled text-warning"></i>
-        <i class="ci-star-filled text-warning"></i>
-        <i class="ci-star-filled text-warning"></i>
-        <i class="ci-star text-body-tertiary opacity-75"></i>
-    </div>
-    <ul class="list-inline gap-2 pb-2 mb-1">
-        <li class="fs-sm me-4"><span class="text-dark-emphasis fw-medium">Color:</span> Blue</li>
-        <li class="fs-sm"><span class="text-dark-emphasis fw-medium">Model:</span> 128GB</li>
-    </ul>
-    <p class="fs-sm">The phone has a new A15 Bionic chip, which makes it lightning-fast and responsive. The camera system has also been upgraded, and it now includes a 12-megapixel ultra-wide lens and a 12-megapixel wide lens.</p>
-    <ul class="list-unstyled fs-sm pb-2 mb-1">
-        <li><span class="text-dark-emphasis fw-medium">Pros:</span> Powerful A15 Bionic chip, improved camera</li>
-        <li><span class="text-dark-emphasis fw-medium">Cons:</span> High price tag</li>
-    </ul>
-    <div class="nav align-items-center">
-        <button type="button" class="nav-link animate-underline px-0">
-            <i class="ci-corner-down-right fs-base ms-1 me-1"></i>
-            <span class="animate-target">Reply</span>
-        </button>
-        <button type="button" class="nav-link text-body-secondary animate-scale px-0 ms-auto me-n1">
-            <i class="ci-thumbs-up text-success fs-base animate-target me-1"></i>
-            18
-        </button>
-        <hr class="vr my-2 mx-3">
-        <button type="button" class="nav-link text-body-secondary animate-scale px-0 ms-n1">
-            <i class="ci-thumbs-down text-danger fs-base animate-target me-1"></i>
-            2
-        </button>
-    </div>
-</div>
 
 <div class="nav">
     <a class="nav-link text-primary animate-underline px-0" href="shop-product-reviews-electronics.html">
