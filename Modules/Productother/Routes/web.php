@@ -9,7 +9,7 @@ Route::controller(ProductOtherFrontendController::class)->group(function () {
     Route::get('/compare', 'compare_index')->name('compare_index');
     Route::get('/compare-add/{urun_no}', 'compare_post')->name('compare_post');
     Route::get('/compare-delete/{id}', 'compare_delete')->name('compare_delete');
-    Route::post('/soru-sor/{product_token}', 'ask_question_post')->name('ask_question_post');
+    Route::post('/soru-sor/{id}', 'ask_question_post')->name('ask_question_post');
 });
 
 Route::prefix('spanel')->middleware(['auth', 'admin'])->controller(ProductOtherBackendController::class)->group(function () {

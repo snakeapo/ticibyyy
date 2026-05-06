@@ -17,16 +17,16 @@
     <div class="d-flex align-items-center border-bottom">
         <ul class="nav nav-underline flex-nowrap gap-4">
             <li class="nav-item me-sm-2">
-                <a class="nav-link pe-none active" href="#!">Ürün hakkında</a>
+                <a class="nav-link pe-none active" href="{{ route('product_detail', $data->slug . '-' . $data->product_token) }}">Ürün hakkında</a>
             </li>
             <li class="nav-item me-sm-2">
-                <a class="nav-link" href="shop-product-details-electronics.html">Soru & cevap ({{ \App\Models\Askques::where('status',1)->where('product_token',$data->product_token)->count() }})</a>
+                <a class="nav-link" href="{{ route('product_detail_ask', $data->slug . '-' . $data->product_token) }}">Soru & cevap ({{ \App\Models\Askques::where('status',1)->where('product_token',$data->product_token)->count() }})</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="shop-product-reviews-electronics.html">Yorumlar ({{ \App\Models\Productcoms::where('status',1)->where('product_token',$data->product_token)->count() }})</a>
+                <a class="nav-link" href="{{ route('product_detail_comment', $data->slug . '-' . $data->product_token) }}">Yorumlar ({{ \App\Models\Productcoms::where('status',1)->where('product_token',$data->product_token)->count() }})</a>
             </li>
         </ul>
-        <a class="d-none d-md-flex align-items-center gap-2 text-decoration-none ms-auto mb-1" href="#reviews">
+        <a class="d-none d-md-flex align-items-center gap-2 text-decoration-none ms-auto mb-1" href="{{ route('product_detail_comment', $data->slug . '-' . $data->product_token) }}">
             <div class="d-flex gap-1 fs-sm">
                 @php
                     $averageRating = Modules\Product\Http\Controllers\Frontend\MasterController::calculateAverageRating($data->id);
@@ -181,7 +181,7 @@
                                     {{-- 🎨 RENK ise --}}
                                     @if($isColor)
                                         {{-- gizli select (JS için) --}}
-                                        <select class="variant-group-select d-none" data-variant-type="{{ $groupName }}">
+                                        <select class="variant-group-select d-none" name="variants[{{ $groupName }}]" data-variant-type="{{ $groupName }}">
                                             <option value="">Seçiniz</option>
                                             @foreach ($groupVariants as $key)
                                                 <option value="{{ $key->id }}"
@@ -221,7 +221,7 @@
                                         {{-- 🔽 NORMAL SELECT --}}
                                     @else
 
-                                        <select class="form-select variant-group-select" data-variant-type="{{ $groupName }}">
+                                        <select class="form-select variant-group-select" name="variants[{{ $groupName }}]" data-variant-type="{{ $groupName }}">
                                             <option value="">Lütfen {{ $groupName }} Seçiniz</option>
 
                                             @foreach ($groupVariants as $key)

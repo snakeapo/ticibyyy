@@ -36,4 +36,9 @@ class Productcoms extends Model
     {
         return $this->hasOne('App\Models\Orders','id','order_id');
     }
+
+    public function items()
+    {
+        return $this->hasMany(Orderitems::class, 'order_token', 'order_no');
+    }
 }

@@ -17,4 +17,11 @@ class AskQuestionPostRequest extends FormRequest
             'ask' => ['required'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'ask.required' => 'Lütfen soru alanını boş bırakmayınız.'
+        ];
+    }
 }

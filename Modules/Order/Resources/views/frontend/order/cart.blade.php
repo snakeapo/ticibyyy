@@ -25,49 +25,95 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($data as $key)
-                                    @php
-                                        $basePrice = $key->getProduct->sale_price != 0 ? (float) $key->getProduct->sale_price : (float) $key->getProduct->price;
-                                        $variantPrice = $key->getVariant ? (float) $key->getVariant->variant_price : 0;
-                                        $unitPrice = $basePrice + $variantPrice;
-                                    @endphp
-                                    <tr>
-                                        <td class="product-remove"><a href="{{ route('cart_delete_product',$key->id) }}" class="remove-wishlist" aria-label="Ürünü sepetten kaldır"><i class="fal fa-times"></i></a></td>
-                                        @if($key->getVariant)
-                                        <td class="product-thumbnail"><a href="{{ route('product_detail', $key->getProduct->slug . '-' . $key->getProduct->product_token) }}"><img src="/upload/product/{{ $key->getVariant->variant_image }}" onerror="this.src='/extra/img/photo.png'" alt="{{ $key->getVariant->variant_name }}"></a></td>
-                                        @else
-                                        <td class="product-thumbnail"><a href="{{ route('product_detail', $key->getProduct->slug . '-' . $key->getProduct->product_token) }}"><img src="/upload/product/{{ $key->getProduct->image }}" onerror="this.src='/extra/img/photo.png'" alt="{{ $key->getProduct->title }}"></a></td>
-                                        @endif
-                                        <td class="product-title">
-                                            <a style="font-size: 14px" href="{{ route('product_detail', $key->getProduct->slug . '-' . $key->getProduct->product_token) }}">{{ $key->getProduct->title }}
-                                                @if($key->getVariant)
-                                                <br>
-                                                {{ $key->getVariant->variant_name }}
-                                                @endif
+                                @foreach ($data as $key)
 
-                                                @if($key->coupon != null)
-                                                <br>
-                                                {{ $key->getCoupon->coupon_code }}
+                                    @php
+                                        $basePrice = $key->getProduct->sale_price != 0
+                                            ? (float) $key->getProduct->sale_price
+                                            : (float) $key->getProduct->price;
+
+                                        // 🔥 MULTI VARIANT AL
+                                        $variantIds = $key->variant ? explode('-', $key->variant) : [];
+                                        $variants = \App\Models\Productvars::whereIn('id', $variantIds)->get();
+
+                                        $variantPrice = $variants->sum('variant_price');
+                                        $unitPrice = $basePrice + $variantPrice;
+
+                                        $firstVariant = $variants->first();
+                                    @endphp
+
+                                    <tr>
+                                        <td class="product-remove">
+                                            <a href="{{ route('cart_delete_product',$key->id) }}" class="remove-wishlist">
+                                                <i class="fal fa-times"></i>
+                                            </a>
+                                        </td>
+
+                                        {{-- 🔥 RESİM --}}
+                                        <td class="product-thumbnail">
+                                            <a href="{{ route('product_detail', $key->getProduct->slug . '-' . $key->getProduct->product_token) }}">
+                                                @if($firstVariant && $firstVariant->variant_image)
+                                                    <img src="/upload/product/{{ $firstVariant->variant_image }}"
+                                                         onerror="this.src='/extra/img/photo.png'">
+                                                @else
+                                                    <img src="/upload/product/{{ $key->getProduct->image }}"
+                                                         onerror="this.src='/extra/img/photo.png'">
                                                 @endif
                                             </a>
                                         </td>
-                                        <td class="product-price" style="font-size: 14px" data-title="Price">{{ number_format($unitPrice,2) }} TL</td>
-                                        <td class="product-quantity" data-title="Qty">
+
+                                        {{-- 🔥 BAŞLIK + VARYANTLAR --}}
+                                        <td class="product-title">
+                                            <a style="font-size: 14px"
+                                               href="{{ route('product_detail', $key->getProduct->slug . '-' . $key->getProduct->product_token) }}">
+
+                                                {{ $key->getProduct->title }}
+
+                                                {{-- 🔥 TÜM VARYANTLARI GÖSTER --}}
+                                                @if($variants->count())
+                                                    <br>
+                                                    @foreach($variants as $v)
+                                                        <span style="font-size:12px; display:block;">
+                                                            {{ $v->variant_type }}: {{ $v->variant_name }}
+                                                        </span>
+                                                    @endforeach
+                                                @endif
+
+                                                {{-- COUPON --}}
+                                                @if($key->coupon != null)
+                                                    <br>
+                                                    {{ $key->getCoupon->coupon_code }}
+                                                @endif
+                                            </a>
+                                        </td>
+
+                                        {{-- FİYAT --}}
+                                        <td class="product-price" style="font-size: 14px">
+                                            {{ number_format($unitPrice,2) }} TL
+                                        </td>
+
+                                        {{-- ADET --}}
+                                        <td class="product-quantity">
                                             @if($key->coupon != null)
-                                            <div class="">
-                                                <i style="font-size: 14px">{{ $key->quantity }}</i>
-                                            </div>
+                                                <div>
+                                                    <i style="font-size: 14px">{{ $key->quantity }}</i>
+                                                </div>
                                             @else
-                                            <div class="">
-                                                <a href="{{ route('cart_decrease',$key->id) }}" aria-label="Adedi azalt"><span class="dec qtybtn">-</span></a>
-                                                <i style="font-size: 14px">{{ $key->quantity }}</i>
-                                                <a href="{{ route('cart_increase',$key->id) }}" aria-label="Adedi artır"><span class="inc qtybtn">+</span></a>
-                                            </div>
+                                                <div>
+                                                    <a href="{{ route('cart_decrease',$key->id) }}"><span class="dec qtybtn">-</span></a>
+                                                    <i style="font-size: 14px">{{ $key->quantity }}</i>
+                                                    <a href="{{ route('cart_increase',$key->id) }}"><span class="inc qtybtn">+</span></a>
+                                                </div>
                                             @endif
                                         </td>
-                                        <td class="product-subtotal" style="font-size: 14px" data-title="Subtotal">{{ number_format($key->total,2) }} TL</td>
+
+                                        {{-- TOPLAM --}}
+                                        <td class="product-subtotal" style="font-size: 14px">
+                                            {{ number_format($key->total,2) }} TL
+                                        </td>
                                     </tr>
-                                    @endforeach
+
+                                @endforeach
                                 </tbody>
                             </table>
                             @else
@@ -113,6 +159,18 @@
                                             <td>Ara Toplam</td>
                                             <td>{{ number_format($subTotal,2) }} TL</td>
                                         </tr>
+                                        @if($setting->free_cargo > $grandTotal)
+
+                                        <tr>
+                                            <td>Kargo</td>
+                                            <td>Ücretsiz</td>
+                                        </tr>
+                                        @else
+                                            <tr>
+                                                <td>Kargo</td>
+                                                <td>Ücretli</td>
+                                            </tr>
+                                        @endif
                                         <tr>
                                             <td>Sepet Kupon İndirimi</td>
                                             <td>-{{ number_format($cartDiscount,2) }} TL</td>

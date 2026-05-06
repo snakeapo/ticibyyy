@@ -14,16 +14,21 @@ use Illuminate\Support\Facades\Auth;
 class MasterController extends Controller
 {
     // Soru Sor
-    public function ask_question_post(AskQuestionPostRequest $request, $product_token)
+    public function ask_question_post(AskQuestionPostRequest $request, $id)
     {
-        $formData = $request->validated();
-        $product = Products::where('product_token', $product_token)->firstOrFail();
-        $formData['product_id'] = $product->id;
-        $formData['product_token'] = $product_token;
-        $formData['user_id'] = Auth::user()->id;
-        $formData['status'] = '0';
-        Askques::create($formData);
-        return back()->with('success', 'Sorunuz İletildi!');
+        if(Auth::check()){
+            $formData = $request->validated();
+            $product = Products::where('id', $id)->firstOrFail();
+            $formData['product_id'] = $id;
+            $formData['product_token'] = $product->product_token;
+            $formData['user_id'] = Auth::user()->id;
+            $formData['status'] = '0';
+            Askques::create($formData);
+            return back()->with('success', 'Sorunuz İletildi!');
+        }else{
+            return back()->with('error','Lütfen önce giriş yapın.');
+        }
+
     }
 
     // Favories insert

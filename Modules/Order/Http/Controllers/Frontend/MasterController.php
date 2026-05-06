@@ -30,31 +30,44 @@ class MasterController extends Controller
     //Basket Cart POST
     public function cart_insert(Request $request, $product_token)
     {
+        // 🔥 VALIDATION
         $validated = $request->validate([
             'quantity' => ['required', 'integer', 'min:1', 'max:999'],
-            'variant' => ['nullable', 'integer'],
+            'variants' => ['required', 'array'], // 🔥 YENİ
             'coupon' => ['nullable', 'string', 'max:255'],
         ]);
 
+        // 🔥 VARIANT ARRAY
+        $variants = $request->input('variants', []);
+
+        // boş kontrol (zorunlu seçim)
+        if (in_array(null, $variants, true) || in_array('', $variants, true)) {
+            return back()->with('error', 'Lütfen tüm varyantları seçiniz.');
+        }
+
+        // 🔥 STRING FORMAT (örn: 16-14)
+        $variantString = implode('-', $variants);
+
         $find = Products::where('product_token', $product_token)->firstOrFail();
 
-        $variant = $this->resolveVariant($find->id, $validated['variant'] ?? null);
-        $this->ensureVariantSelectionIfRequired($find, $variant);
+        // 🔥 ARTIK TEK VARIANT YOK
+        $variant = null;
 
         $basket = Baskets::firstOrCreate(
             ['user_id' => Auth::id()],
             ['basket_token' => date('his') * rand(999, 999999)]
         );
 
+        // 🔥 VARIANT STRING İLE ARA
         $basketQuery = Basketitems::where('product_id', $find->id)
             ->where('user_id', Auth::id())
-            ->where('variant', $validated['variant'] ?? null);
+            ->where('variant', $variantString);
 
         $basketFind = $basketQuery->first();
 
         $findCp = null;
-        $couponDiscount = 0;
 
+        // 🔥 COUPON (DEĞİŞMEDİ)
         if (!empty($validated['coupon'])) {
             $findCp = Coupons::whereRaw('UPPER(coupon_code) = ?', [strtoupper(trim($validated['coupon']))])
                 ->where('status', 1)
@@ -71,18 +84,22 @@ class MasterController extends Controller
             }
         }
 
-        DB::transaction(function () use ($basketFind, $validated, $find, $product_token, $variant, $basket, $findCp) {
+        DB::transaction(function () use ($basketFind, $validated, $find, $product_token, $variantString, $basket, $findCp) {
+
             $existingQty = $basketFind ? (int) $basketFind->quantity : 0;
             $requestedQty = (int) $validated['quantity'];
             $targetQty = $existingQty + $requestedQty;
-            $this->assertStockAvailable($find, $variant, $targetQty);
+
+            // 🔥 ŞİMDİLİK STOCK KONTROL PAS GEÇİLDİ (kombinasyon yok)
+            // $this->assertStockAvailable(...);
 
             if (!$basketFind) {
+
                 $basketFind = Basketitems::create([
                     'user_id' => Auth::id(),
                     'product_id' => $find->id,
                     'product_token' => $product_token,
-                    'variant' => $variant?->id,
+                    'variant' => $variantString, // 🔥 ANA NOKTA
                     'old_total' => '0',
                     'total' => '0',
                     'quantity' => (string) $validated['quantity'],
@@ -93,7 +110,9 @@ class MasterController extends Controller
                 if ($findCp) {
                     $findCp->decrement('coupon_quantity');
                 }
+
             } else {
+
                 $basketFind->quantity = (string) (((int) $basketFind->quantity) + ((int) $validated['quantity']));
                 $basketFind->save();
             }
@@ -103,7 +122,6 @@ class MasterController extends Controller
 
         return redirect()->route('shopping_cart')->with('success', 'Ürün sepete eklendi!');
     }
-
     //Cart
     public function shopping_cart()
     {
@@ -259,9 +277,15 @@ class MasterController extends Controller
     {
         $find = Basketitems::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
         $product = Products::findOrFail($find->product_id);
-        $variant = $find->variant
-            ? Productvars::where('id', $find->variant)->where('product_token', $product->product_token)->first()
-            : null;
+        $variantIds = $find->variant
+            ? array_filter(explode('-', $find->variant))
+            : [];
+
+        $variants = Productvars::whereIn('id', $variantIds)->get();
+
+        foreach ($variants as $variant) {
+            $this->assertStockAvailable($product, $variant, ((int) $find->quantity) + 1);
+        }
         $this->assertStockAvailable($product, $variant, ((int) $find->quantity) + 1);
 
         $find->quantity = (string) (((int) $find->quantity) + 1);
@@ -393,13 +417,21 @@ class MasterController extends Controller
             //Banka Transfer
         if($request->payment_system == 1){
 
-        return redirect()->route('order_complated',$order_token);
+            DB::transaction(function () use ($orderItems) {
+                $this->assertCartStockBeforeOrder($orderItems, true);
+            });
+
+            return redirect()->route('order_complated',$order_token);
 
 /* ================================================================ */
 
             //Kapıda Ödeme
         }elseif($request->payment_system == 2){
-        return redirect()->route('order_complated',$order_token);
+            DB::transaction(function () use ($orderItems) {
+                $this->assertCartStockBeforeOrder($orderItems, true);
+            });
+
+            return redirect()->route('order_complated',$order_token);
 
 /* ================================================================ */
 
@@ -536,14 +568,16 @@ class MasterController extends Controller
 
 
 
-        if( $post['status'] == 'success' ) { ## Ödeme Onaylandı
+        if( $post['status'] == 'success' ) {
 
-            //işlem başarılı ile işlemimi yapıyorum
-         $update = Orders::where('order_no',$post['merchant_oid'])->update([
+            Orders::where('order_no',$post['merchant_oid'])->update([
                 "payment_status" => 1,
-
             ]);
 
+            $orderItems = Orderitems::where('order_token',$post['merchant_oid'])->get();
+
+            app(\Modules\Order\Http\Controllers\Frontend\MasterController::class)
+                ->assertCartStockBeforeOrder($orderItems, true);
         } else { ## Ödemeye Onay Verilmedi
 
         }
@@ -619,29 +653,44 @@ class MasterController extends Controller
         }
     }
 
-    private function assertCartStockBeforeOrder($basketItems, bool $decreaseStock = false): void
+    private function assertCartStockBeforeOrder($items, bool $decreaseStock = false): void
     {
-        foreach ($basketItems as $item) {
+        foreach ($items as $item) {
+
             $product = Products::lockForUpdate()->findOrFail($item->product_id);
-            $variant = null;
-            if ($item->variant) {
-                $variant = Productvars::where('id', $item->variant)
+
+            // 🔥 BURAYI DÜZELT
+            $variantString = $item->variant ?? $item->variant_token ?? null;
+
+            $variantIds = $variantString
+                ? array_filter(explode('-', $variantString))
+                : [];
+
+            $variants = collect();
+
+            if (!empty($variantIds)) {
+                $variants = Productvars::whereIn('id', $variantIds)
                     ->where('product_token', $product->product_token)
                     ->lockForUpdate()
-                    ->first();
-                if (!$variant) {
-                    throw ValidationException::withMessages(['stock' => 'Sepetteki varyant artık geçerli değil.']);
-                }
+                    ->get();
             }
 
             $quantity = (int) $item->quantity;
-            $this->assertStockAvailable($product, $variant, $quantity);
 
+            // 🔥 STOCK KONTROL
+            foreach ($variants as $variant) {
+                $this->assertStockAvailable($product, $variant, $quantity);
+            }
+
+            // 🔥 STOCK DÜŞ
             if ($decreaseStock) {
-                if ($variant) {
+
+                // 🔥 product her zaman düşmeli
+                $product->decrement('stock', $quantity);
+
+                // 🔥 variant düş
+                foreach ($variants as $variant) {
                     $variant->decrement('variant_stock', $quantity);
-                } else {
-                    $product->decrement('stock', $quantity);
                 }
             }
         }
@@ -650,34 +699,50 @@ class MasterController extends Controller
     private function assertOrderStockBeforeFinalize($orderItems): void
     {
         foreach ($orderItems as $item) {
+
             $product = Products::find($item->product_id);
+
             if (!$product) {
                 throw ValidationException::withMessages([
-                    'stock' => 'Sepetteki ürün artık bulunamadı. Lütfen sepetinizi güncelleyip tekrar deneyin.',
+                    'stock' => 'Ürün artık yok.'
                 ]);
             }
-            $variant = null;
-            if ($item->variant_token) {
-                $variant = Productvars::where('id', $item->variant_token)
+
+            $variantIds = $item->variant_token
+                ? array_filter(explode('-', $item->variant_token))
+                : [];
+
+            $variants = collect();
+
+            if (!empty($variantIds)) {
+                $variants = Productvars::whereIn('id', $variantIds)
                     ->where('product_token', $product->product_token)
-                    ->first();
-                if (!$variant) {
-                    throw ValidationException::withMessages(['stock' => 'Siparişteki varyant artık geçerli değil.']);
-                }
+                    ->get();
             }
-            $this->assertStockAvailable($product, $variant, (int) $item->quantity);
+
+            foreach ($variants as $variant) {
+                $this->assertStockAvailable($product, $variant, (int) $item->quantity);
+            }
         }
     }
 
     private function findInvalidOrderItemMessage($orderItems): ?string
     {
         foreach ($orderItems as $item) {
+
             if (!$item->getProduct) {
-                return 'Sepetteki ürünlerden biri artık mevcut değil. Lütfen sepetinizi güncelleyip tekrar deneyin.';
+                return 'Sepetteki ürünlerden biri artık mevcut değil.';
             }
 
-            if ($item->variant_token && !$item->getVariant) {
-                return 'Sepetteki varyantlardan biri artık geçerli değil. Lütfen ürünü tekrar sepete ekleyin.';
+            if ($item->variant_token) {
+
+                $variantIds = array_filter(explode('-', $item->variant_token));
+
+                $count = Productvars::whereIn('id', $variantIds)->count();
+
+                if ($count !== count($variantIds)) {
+                    return 'Sepetteki varyantlardan biri artık geçerli değil. Lütfen ürünü tekrar sepete ekleyin.';
+                }
             }
         }
 
@@ -687,28 +752,52 @@ class MasterController extends Controller
     private function recalculateBasketItem(Basketitems $item): void
     {
         $product = Products::findOrFail($item->product_id);
+
+        // 🔥 BASE PRICE
+        $basePrice = (float) (
+        $product->sale_price != 0
+            ? $product->sale_price
+            : $product->price
+        );
+
+        // 🔥 MULTI VARIANT PARSE
+        $variantIds = $item->variant ? explode('-', $item->variant) : [];
+
         $variantPrice = 0;
-        if ($item->variant) {
-            $variant = Productvars::where('id', $item->variant)
+
+        if (!empty($variantIds)) {
+            $variants = Productvars::whereIn('id', $variantIds)
                 ->where('product_token', $product->product_token)
-                ->first();
-            if (!$variant) {
-                throw ValidationException::withMessages(['variant' => 'Sepetteki varyant geçersiz.']);
-            }
-            $variantPrice = (float) $variant->variant_price;
+                ->get();
+
+
+            $variantPrice = (float) $variants->sum('variant_price');
         }
 
-        $unitPrice = (float) ($product->sale_price != 0 ? $product->sale_price : $product->price) + $variantPrice;
-        $lineSubTotal = $unitPrice * (int) $item->quantity;
+        // 🔥 UNIT PRICE
+        $unitPrice = $basePrice + $variantPrice;
+
+        // 🔥 SUBTOTAL
+        $quantity = (int) $item->quantity;
+        $lineSubTotal = $unitPrice * $quantity;
+
+        // 🔥 COUPON
         $discount = 0;
         if ($item->coupon) {
             $coupon = Coupons::find($item->coupon);
-            if ($coupon && $coupon->status == 1 && in_array($coupon->coupon_scope, ['product', 'both'], true)) {
+
+            if (
+                $coupon &&
+                $coupon->status == 1 &&
+                in_array($coupon->coupon_scope, ['product', 'both'], true)
+            ) {
                 $discount = $coupon->getDiscountAmount($lineSubTotal);
             }
         }
+
         $lineTotal = max(0, $lineSubTotal - $discount);
 
+        // 🔥 SAVE
         $item->update([
             'old_total' => (string) $lineSubTotal,
             'total' => (string) $lineTotal,

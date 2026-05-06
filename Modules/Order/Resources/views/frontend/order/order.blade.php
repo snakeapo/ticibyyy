@@ -49,73 +49,174 @@
                     <div class="col-lg-6">
                         <div class="axil-order-summery order-checkout-summery">
                             <h5 class="title mb--20">Siparişiniz</h5>
+
                             <div class="summery-table-wrap">
                                 <table class="table summery-table">
                                     <thead>
-                                        <tr>
-                                            <th>Ürün</th>
-                                            <th>Ara Fiyat</th>
-                                        </tr>
+                                    <tr>
+                                        <th>Ürün</th>
+                                        <th>Ara Fiyat</th>
+                                    </tr>
                                     </thead>
+
                                     <tbody>
-                                        @foreach ($items as $key)
+                                    @foreach ($items as $key)
+
+                                        @php
+                                            $variantIds = $key->variant_token
+                                                ? array_filter(explode('-', $key->variant_token))
+                                                : [];
+
+                                            $variants = \App\Models\Productvars::whereIn('id', $variantIds)->get();
+
+                                            // 🔥 BASE PRICE (ürün fiyatı)
+                                            $baseTotal = 0;
+
+                                            if ($key->quantity > 0) {
+                                                $unitPrice = $key->total / $key->quantity;
+                                            } else {
+                                                $unitPrice = 0;
+                                            }
+
+                                            // 🔥 varyant toplamı
+                                            $variantTotal = $variants->sum('variant_price');
+
+                                            // 🔥 base price hesapla (unit - variant)
+                                            $basePrice = $unitPrice - $variantTotal;
+                                        @endphp
+
                                         <tr class="order-product">
-                                            <td>{{ optional($key->getProduct)->title ?? 'Ürün bulunamadı' }} @if($key->getVariant)
-                                                <br>
-                                                {{ $key->getVariant->variant_name }} x {{ number_format($key->getVariant->variant_price,2) }} TL
-                                            @endif <span class="quantity">x{{ $key->quantity }}</span></td>
-                                            <td>{{ number_format($key->total,2) }} TL</td>
-                                        </tr>
-                                        @endforeach
-                                        <tr class="order-shipping">
-                                            <td colspan="2">
-                                                <div class="shipping-amount">
-                                                    <span class="title">Kargolama</span>
-                                                </div>
-                                                <div id="cargo-options">
-                                                    @forelse ($cargos as $key)
-                                                    <div class="input-group">
-                                                        <input type="radio" id="cargo{{ $key->id }}" value="{{ $key->id }}" required name="cargo" data-price="{{ $key->cargo_price }}">
-                                                        <label for="cargo{{ $key->id }}">{{ $key->cargo_title }} x {{ number_format($key->cargo_price,2) }} TL</label>
-                                                    </div>
-                                                    @empty
-                                                    <p class="text-danger mb-0">Şu an kullanılabilir kargo seçeneği yok.</p>
-                                                    @endforelse
-                                                </div>
+
+                                            {{-- ÜRÜN --}}
+                                            <td>
+                                                {{ optional($key->getProduct)->title ?? 'Ürün bulunamadı' }}
+
+                                                {{-- 🔥 VARYANTLAR --}}
+                                                @if($variants->count())
+                                                    <br>
+                                                    @foreach($variants as $v)
+                                                        <span style="font-size:12px; display:block;">
+                        {{ $v->variant_type }}:
+                        {{ $v->variant_name }}
+                        (+{{ number_format($v->variant_price,2) }} TL)
+                    </span>
+                                                    @endforeach
+                                                @endif
+
+                                                <span class="quantity">x{{ $key->quantity }}</span>
                                             </td>
+
+                                            {{-- FİYAT DETAY --}}
+                                            <td style="font-size:13px">
+
+                                                {{-- ÜRÜN FİYATI --}}
+                                                <div>
+                                                    Ürün:
+                                                    {{ number_format($basePrice,2) }} TL
+                                                </div>
+
+                                                {{-- VARYANT --}}
+                                                @if($variantTotal > 0)
+                                                    <div>
+                                                        Varyantlar:
+                                                        +{{ number_format($variantTotal,2) }} TL
+                                                    </div>
+                                                @endif
+
+                                                {{-- TOPLAM --}}
+                                                <div style="font-weight:600; margin-top:4px;">
+                                                    Toplam:
+                                                    {{ number_format($unitPrice,2) }} TL
+                                                    x {{ $key->quantity }}
+                                                </div>
+
+                                                <div>
+                                                    <strong>{{ number_format($key->total,2) }} TL</strong>
+                                                </div>
+
+                                            </td>
+
                                         </tr>
-                                        <tr class="order-total">
-                                            <td>Toplam</td>
-                                            <td class="order-total-amount" data-base-total="{{ number_format((float) $data->total, 2, '.', '') }}">{{ number_format($data->total,2) }} TL</td>
-                                        </tr>
+
+                                    @endforeach
+
+                                    {{-- KARGO --}}
+                                    <tr class="order-shipping">
+                                        <td colspan="2">
+                                            <div class="shipping-amount">
+                                                <span class="title">Kargolama</span>
+                                            </div>
+
+                                            <div id="cargo-options">
+                                                @forelse ($cargos as $key)
+                                                    <div class="input-group">
+                                                        <input type="radio"
+                                                               id="cargo{{ $key->id }}"
+                                                               value="{{ $key->id }}"
+                                                               required
+                                                               name="cargo"
+                                                               data-price="{{ $key->cargo_price }}">
+
+                                                        <label for="cargo{{ $key->id }}">
+                                                            {{ $key->cargo_title }}
+                                                            x {{ number_format($key->cargo_price,2) }} TL
+                                                        </label>
+                                                    </div>
+                                                @empty
+                                                    <p class="text-danger mb-0">
+                                                        Şu an kullanılabilir kargo seçeneği yok.
+                                                    </p>
+                                                @endforelse
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    {{-- TOPLAM --}}
+                                    <tr class="order-total">
+                                        <td>Toplam</td>
+                                        <td class="order-total-amount"
+                                            data-base-total="{{ number_format((float) $data->total, 2, '.', '') }}">
+                                            {{ number_format($data->total,2) }} TL
+                                        </td>
+                                    </tr>
+
                                     </tbody>
                                 </table>
                             </div>
+
+                            {{-- ÖDEME --}}
                             <div class="order-payment-method">
+
                                 <div class="single-payment">
                                     <div class="input-group">
                                         <input type="radio" id="radio4" value="1" name="payment_system" required>
                                         <label for="radio4">Banka Havale & Eft</label>
                                     </div>
-                                    <p>Ödemenizi doğrudan banka hesabımıza yapın. Lütfen ödeme referansı olarak Sipariş Kimliğinizi kullanın. Hesabımıza para geçene kadar siparişiniz gönderilmeyecektir.</p>
                                 </div>
+
                                 <div class="single-payment">
                                     <div class="input-group">
                                         <input type="radio" id="radio5" value="2" name="payment_system" required>
                                         <label for="radio5">Kapıda Ödeme</label>
                                     </div>
-                                    <p>Kapıda ödeme seçeneği ile size verilen kod sayesinde kapıda ödeme yapabilirsiniz.</p>
                                 </div>
+
                                 <div class="single-payment">
                                     <div class="input-group justify-content-between align-items-center">
                                         <input type="radio" id="radio6" value="3" name="payment_system" required>
                                         <label for="radio6">Paytr</label>
-                                        <img src="/extra/img/paytr.svg" width="60" alt="paytr payment">
+                                        <img src="/extra/img/paytr.svg" width="60">
                                     </div>
-                                    <p>Paytr sanal pos ile ödemenizi anında yapın, ürün hemen hazırlanıp kargolansın</p>
                                 </div>
+
                             </div>
-                            <button type="submit" class="axil-btn btn-bg-primary" @if($cargos->isEmpty()) disabled @endif>Siparişi Onayla</button>
+
+                            <button type="submit"
+                                    class="axil-btn btn-bg-primary"
+                                    @if($cargos->isEmpty()) disabled @endif>
+                                Siparişi Onayla
+                            </button>
+
                         </div>
                     </div>
                 </div>

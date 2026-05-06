@@ -61,21 +61,42 @@
     <div class="border-bottom py-3 mb-3">
         <div class="d-flex align-items-center mb-3">
             <div class="text-nowrap me-3">
-                <span class="h6 mb-0">Andrew Richards</span>
-                <i class="ci-check-circle text-success align-middle ms-1" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-sm" data-bs-title="Verified customer"></i>
+                <span class="h6 mb-0">{{ $takeComment->getUser->name }} {{ $takeComment->getUser->surname }}</span>
             </div>
             <span class="text-body-secondary fs-sm ms-auto">{{ \Carbon\Carbon::parse($takeComment->created_at)->diffForHumans() }}</span>
         </div>
+        @php
+            $rating = $takeComment->point; // örn: 3.5
+        @endphp
+
         <div class="d-flex gap-1 fs-sm pb-2 mb-1">
-            <i class="ci-star-filled text-warning"></i>
-            <i class="ci-star-filled text-warning"></i>
-            <i class="ci-star-filled text-warning"></i>
-            <i class="ci-star-filled text-warning"></i>
-            <i class="ci-star-filled text-warning"></i>
+            @for ($i = 1; $i <= 5; $i++)
+                @if ($rating >= $i)
+                    <i class="ci-star-filled text-warning"></i>
+                @elseif ($rating >= $i - 0.5)
+                    <i class="ci-star-half text-warning"></i>
+                @else
+                    <i class="ci-star text-muted"></i>
+                @endif
+            @endfor
         </div>
+        @php
+            $variantIds = [];
+
+            $order = \App\Models\Orders::where('id',$takeComment->order_id)->first();
+            $orderitems = \App\Models\Orderitems::where('order_token',$order->order_no)->first();
+
+            $variantIds = array_merge($variantIds, explode('-', $orderitems->variant_token));
+
+            $variants = \App\Models\Productvars::whereIn('id', $variantIds)->get();
+        @endphp
+
         <ul class="list-inline gap-2 pb-2 mb-1">
-            <li class="fs-sm me-4"><span class="text-dark-emphasis fw-medium">Color:</span> Purple</li>
-            <li class="fs-sm"><span class="text-dark-emphasis fw-medium">Model:</span> 128GB</li>
+            @foreach($variants as $takeVar)
+
+                <li class="fs-sm me-4"><span class="text-dark-emphasis fw-medium">{{$takeVar->variant_type}}:</span> {{$takeVar->variant_name}}</li>
+
+            @endforeach
         </ul>
         <p class="fs-sm">{{ $takeComment->comment }}</p>
 
@@ -109,8 +130,8 @@
 
 
 <div class="nav">
-    <a class="nav-link text-primary animate-underline px-0" href="shop-product-reviews-electronics.html">
-        <span class="animate-target">See all reviews</span>
+    <a class="nav-link text-primary animate-underline px-0" href="{{ route('product_detail_comment', $data->slug . '-' . $data->product_token) }}">
+        <span class="animate-target">Tüm yorumları gör</span>
         <i class="ci-chevron-right fs-base ms-1"></i>
     </a>
 </div>

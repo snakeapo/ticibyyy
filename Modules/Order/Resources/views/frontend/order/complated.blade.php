@@ -71,15 +71,71 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach ($items as $key)
+                                    @foreach ($items as $key)
+
+                                        @php
+                                            // 🔥 variant parse
+                                            $variantIds = $key->variant_token
+                                                ? array_filter(explode('-', $key->variant_token))
+                                                : [];
+
+                                            $variants = \App\Models\Productvars::whereIn('id', $variantIds)->get();
+
+                                            // 🔥 variant toplam
+                                            $variantTotal = $variants->sum('variant_price');
+
+                                            // 🔥 unit price
+                                            $unitPrice = $key->quantity > 0
+                                                ? ($key->total / $key->quantity)
+                                                : 0;
+
+                                            // 🔥 base price
+                                            $basePrice = $unitPrice - $variantTotal;
+                                        @endphp
+
                                         <tr class="order-product">
-                                            <td>{{ $key->getProduct->title }}   @if($key->getVariant)
-                                    <br>
-                                    {{ $key->getVariant->variant_name }} x {{ number_format($key->getVariant->variant_price,2) }} TL
-                                @endif <span class="quantity">x{{ $key->quantity }}</span></td>
-                                            <td>{{ number_format($key->total,2) }} TL</td>
+
+                                            {{-- ÜRÜN --}}
+                                            <td>
+                                                {{ $key->getProduct->title }}
+
+                                                {{-- 🔥 VARYANTLAR --}}
+                                                @if($variants->count())
+                                                    <br>
+                                                    @foreach($variants as $v)
+                                                        <span style="font-size:12px; display:block;">
+                        {{ $v->variant_type }}:
+                        {{ $v->variant_name }}
+                        (+{{ number_format($v->variant_price,2) }} TL)
+                    </span>
+                                                    @endforeach
+                                                @endif
+
+                                                <span class="quantity">x{{ $key->quantity }}</span>
+                                            </td>
+
+                                            {{-- FİYAT --}}
+                                            <td style="font-size:13px">
+
+                                                <div>Ürün: {{ number_format($basePrice,2) }} TL</div>
+
+                                                @if($variantTotal > 0)
+                                                    <div>Varyantlar: +{{ number_format($variantTotal,2) }} TL</div>
+                                                @endif
+
+                                                <div style="font-weight:600;">
+                                                    Toplam: {{ number_format($unitPrice,2) }} TL x {{ $key->quantity }}
+                                                </div>
+
+                                                <div>
+                                                    <strong>{{ number_format($key->total,2) }} TL</strong>
+                                                </div>
+
+                                            </td>
+
                                         </tr>
-                                        @endforeach
+
+                                    @endforeach
                                         <tr class="order-shipping">
                                             <td colspan="2">
                                                 <div class="shipping-amount">

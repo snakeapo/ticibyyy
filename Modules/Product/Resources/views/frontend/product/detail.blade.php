@@ -26,8 +26,16 @@
                 return !empty($variant->variant_image);
             });
     @endphp
+    @if($type == "product")
+        @include('product::frontend.product.new.detail')
 
-    @include('product::frontend.product.new.detail')
+    @elseif($type == "comment")
+        @include('product::frontend.product.new.comment')
+
+    @elseif($type == "ask")
+        @include('product::frontend.product.new.ask')
+
+    @endif
 
     @section('js')
 
@@ -92,7 +100,32 @@
 
                     return selections;
                 };
+                const resolveVariantFromCombination = () => {
+                    const selections = selectedOptionByType();
 
+                    if (Object.keys(selections).length !== variantGroupSelects.length) {
+                        return null;
+                    }
+
+                    const allVariants = window.productVariants || [];
+
+                    for (let variant of allVariants) {
+                        let match = true;
+
+                        for (let key in selections) {
+                            if (String(variant.attributes[key]) !== String(selections[key].id)) {
+                                match = false;
+                                break;
+                            }
+                        }
+
+                        if (match) {
+                            return variant;
+                        }
+                    }
+
+                    return null;
+                };
                 const parseVariantNames = (value) => {
                     return (value || '')
                         .split(',')
@@ -218,7 +251,7 @@
 
                         refreshOptionAvailability();
 
-                        const resolvedVariant = resolveSelectedVariant();
+                        const resolvedVariant = resolveVariantFromCombination();
 
                         // 🎯 RENK ÖNCELİK
                         const colorVariantId = getSelectedColorVariantId();
@@ -271,6 +304,22 @@
                 }
 
             })();
+        </script>
+        @php
+            $productVariants = \App\Models\Productvars::where('product_token',$data->product_token)
+                ->get()
+                ->map(function($v){
+                    return [
+                        'id' => $v->id,
+                        'stock' => $v->variant_stock,
+                        'attributes' => [
+                            $v->variant_type => (string)$v->id
+                        ]
+                    ];
+                });
+        @endphp
+        <script>
+            window.productVariants = @json($productVariants);
         </script>
 
     @endsection

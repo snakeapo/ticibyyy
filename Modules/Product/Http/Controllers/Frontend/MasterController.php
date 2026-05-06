@@ -3,6 +3,7 @@
 namespace Modules\Product\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Models\Askques;
 use App\Models\Cargos;
 use App\Models\Pasts;
 use App\Models\Brands;
@@ -35,6 +36,7 @@ class MasterController extends Controller
     // Detail
     public function product_detail($slug)
     {
+        $type = "product";
         $slugParts = explode('-', $slug);
         $productToken = end($slugParts);
 
@@ -86,19 +88,97 @@ class MasterController extends Controller
             'avgRating',
             'ratings',
             'commentProduct',
-            'relatedProduct'
+            'relatedProduct',
+            'type'
         ));
     }
 
     public function product_detail_comment($slug)
     {
+        $type = "comment";
         $slugParts = explode('-', $slug);
         $productToken = end($slugParts);
 
-        $find = Products::where('product_token', $productToken)->firstOrFail();
+        $data = Products::where('product_token', $productToken)
+            ->where('status', 1)
+            ->firstOrFail();
+
+
+        // ✅ Yorumları çek
+        $reviews = \App\Models\Productcoms::where('product_token', $productToken)
+            ->where('status', '1')
+            ->get();
+
+        $totalReviews = $reviews->count();
+        $avgRating = $reviews->avg('point') ?? 0;
+
+        // ✅ Yıldız dağılımı
+        $ratings = [
+            5 => $reviews->where('point', 5)->count(),
+            4 => $reviews->where('point', 4)->count(),
+            3 => $reviews->where('point', 3)->count(),
+            2 => $reviews->where('point', 2)->count(),
+            1 => $reviews->where('point', 1)->count(),
+        ];
+
+        $dataComment = Productcoms::with(['items'])->where('product_id', $data->id)->where('status',1)->orderBy('id','desc')->paginate(10);
+
+        return view('product::frontend.product.detail', compact(
+            'data',
+            'reviews',
+            'totalReviews',
+            'avgRating',
+            'ratings',
+            'type',
+            'dataComment'
+        ));
 
     }
+    public function product_detail_ask($slug)
+    {
+        $type = "ask";
+        $slugParts = explode('-', $slug);
+        $productToken = end($slugParts);
 
+        $data = Products::where('product_token', $productToken)
+            ->where('status', 1)
+            ->firstOrFail();
+
+
+
+        // ✅ Yorumları çek
+        $reviews = \App\Models\Productcoms::where('product_token', $productToken)
+            ->where('status', '1')
+            ->get();
+
+        $totalReviews = $reviews->count();
+        $avgRating = $reviews->avg('point') ?? 0;
+
+        // ✅ Yıldız dağılımı
+        $ratings = [
+            5 => $reviews->where('point', 5)->count(),
+            4 => $reviews->where('point', 4)->count(),
+            3 => $reviews->where('point', 3)->count(),
+            2 => $reviews->where('point', 2)->count(),
+            1 => $reviews->where('point', 1)->count(),
+        ];
+
+
+        $dataAsk = Askques::where('product_id', $data->id)->where('status',1)->orderBy('id','desc')->paginate(10);
+
+        return view('product::frontend.product.detail', compact(
+            'data',
+            'reviews',
+            'totalReviews',
+            'avgRating',
+            'ratings',
+
+            'type',
+            'dataAsk'
+        ));
+
+        return view('product::frontend.product.detail', compact('find','data','type'));
+    }
     // Search Product
     public function product_search(Request $request)
     {

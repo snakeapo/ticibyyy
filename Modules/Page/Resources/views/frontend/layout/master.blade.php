@@ -48,7 +48,7 @@
     <!-- Header -->
     <div class="offcanvas-header flex-column align-items-start py-3 pt-lg-4">
         <div class="d-flex align-items-center justify-content-between w-100 mb-3 mb-lg-4">
-            <h4 class="offcanvas-title" id="shoppingCartLabel">Shopping cart</h4>
+            <h4 class="offcanvas-title" id="shoppingCartLabel">Sepetim</h4>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <p class="fs-sm">Buy <span class="text-dark-emphasis fw-semibold">$183</span> more to get <span class="text-dark-emphasis fw-semibold">Free Shipping</span></p>

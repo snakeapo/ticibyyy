@@ -40,4 +40,13 @@ class Basketitems extends Model
     {
         return $this->hasOne('App\Models\Coupons','id','coupon');
     }
+
+    public function getVariantsMulti()
+    {
+        if (!$this->variant) return collect();
+
+        $ids = explode('-', $this->variant);
+
+        return \App\Models\Productvars::whereIn('id', $ids)->get();
+    }
 }
