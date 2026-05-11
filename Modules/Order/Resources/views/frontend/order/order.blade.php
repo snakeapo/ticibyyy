@@ -5,6 +5,7 @@
         $showNewAddress = !$hasAddresses || old('address_title') || old('address') || old('city') || old('town') || old('phone') || old('postal_code');
         $selectedAddressId = $showNewAddress ? null : old('user_address', optional($address->first())->id);
         $baseTotal = (float) $data->total;
+        $cashOnDeliveryEnabled = (bool) optional($setting)->cash_on_delivery_enabled;
     @endphp
 
     <div class="container py-5">
@@ -113,12 +114,14 @@
                                             Banka Havale & Eft
                                         </label>
                                     </div>
-                                    <div class="mt-4">
-                                        <label class="form-check-label w-100 text-dark-emphasis fw-semibold">
-                                            <input type="radio" class="form-check-input fs-base me-2 me-sm-3" value="2" name="payment_system" required @checked(old('payment_system') == 2)>
-                                            Kapıda Ödeme
-                                        </label>
-                                    </div>
+                                    @if($cashOnDeliveryEnabled)
+                                        <div class="mt-4">
+                                            <label class="form-check-label w-100 text-dark-emphasis fw-semibold">
+                                                <input type="radio" class="form-check-input fs-base me-2 me-sm-3" value="2" name="payment_system" required @checked(old('payment_system') == 2)>
+                                                Kapıda Ödeme
+                                            </label>
+                                        </div>
+                                    @endif
                                     <div class="mt-4">
                                         <label class="form-check-label d-flex align-items-center text-dark-emphasis fw-semibold">
                                             <input type="radio" class="form-check-input fs-base me-2 me-sm-3" value="3" name="payment_system" required @checked(old('payment_system') == 3)>

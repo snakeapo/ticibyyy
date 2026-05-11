@@ -47,5 +47,6 @@ class Settings extends Model
         'paytr_id',
         'paytr_salt',
         'paytr_key',
+        'cash_on_delivery_enabled',
     ];
 }

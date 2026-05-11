@@ -52,6 +52,7 @@ class SettingTableSeeder extends Seeder
             'paytr_id'=> '1',
             'paytr_salt'=> '1',
             'paytr_key'=> '1',
+            'cash_on_delivery_enabled' => true,
         ]);
     }
 }

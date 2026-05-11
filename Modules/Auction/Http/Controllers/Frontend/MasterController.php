@@ -9,6 +9,7 @@ use App\Models\AuctionItem;
 use App\Models\AuctionOrder;
 use App\Models\Address;
 use App\Models\Cargos;
+use App\Models\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -28,7 +29,9 @@ class MasterController extends Controller
         $current = $auction->currentItem;
         $bids = $current ? AuctionBid::with('user:id,name,surname')->where('auction_item_id', $current->id)->latest()->take(30)->get() : collect();
 
-        return view('auction::front.live', compact('auction', 'current', 'bids'));
+        $cashOnDeliveryEnabled = (bool) optional(Settings::find(1))->cash_on_delivery_enabled;
+
+        return view('auction::front.live', compact('auction', 'current', 'bids', 'cashOnDeliveryEnabled'));
     }
 
     public function myOrders()
@@ -63,7 +66,9 @@ class MasterController extends Controller
             $cargos = Cargos::orderBy('id')->get();
         }
 
-        return view('auction::front.checkout', compact('order', 'address', 'cargos'));
+        $cashOnDeliveryEnabled = (bool) optional(Settings::find(1))->cash_on_delivery_enabled;
+
+        return view('auction::front.checkout', compact('order', 'address', 'cargos', 'cashOnDeliveryEnabled'));
     }
 
     public function completeCheckout(Request $request, AuctionOrder $order)
@@ -71,7 +76,9 @@ class MasterController extends Controller
         abort_unless((int) $order->user_id === (int) Auth::id(), 403);
         $order->load('auction');
 
-        $paymentRule = $order->auction && $order->auction->requires_balance ? 'nullable|in:balance' : 'required|in:bank_transfer,cash_on_delivery';
+        $cashOnDeliveryEnabled = (bool) optional(Settings::find(1))->cash_on_delivery_enabled;
+        $paymentMethods = $cashOnDeliveryEnabled ? 'bank_transfer,cash_on_delivery' : 'bank_transfer';
+        $paymentRule = $order->auction && $order->auction->requires_balance ? 'nullable|in:balance' : 'required|in:' . $paymentMethods;
         $validated = $request->validate([
             'user_address' => ['nullable', 'integer', 'exists:address,id'],
             'address_title' => ['required_without:user_address', 'nullable', 'string', 'max:255'],
