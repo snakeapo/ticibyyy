@@ -72,7 +72,7 @@ class SystemController extends Controller
     {
         $data = Orders::findOrFail($id);
         $items = Orderitems::where('order_token',$data->order_no)->get();
-        $address = Address::where('address_token',$data->user_address)->first();
+        $address = Address::where('id', $data->user_address)->orWhere('address_token', $data->user_address)->first();
         return view('order::backend.items.order.detail',compact('data','items','address'));
     }
 

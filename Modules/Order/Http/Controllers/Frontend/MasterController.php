@@ -439,13 +439,21 @@ class MasterController extends Controller
         $validated = $request->validated();
 
         $formData = [
-            'address_title' => $validated['address_title'],
-            'city' => $validated['city'],
-            'town' => $validated['town'],
-            'address' => $validated['address'],
-            'postal_code' => $validated['postal_code'],
-            'phone' => $validated['phone'],
+            'address_title' => $validated['address_title'] ?? null,
+            'city' => $validated['city'] ?? null,
+            'town' => $validated['town'] ?? null,
+            'address' => $validated['address'] ?? null,
+            'postal_code' => $validated['postal_code'] ?? null,
+            'phone' => $validated['phone'] ?? null,
         ];
+
+        $selectedAddress = null;
+
+        if (!empty($validated['user_address'])) {
+            $selectedAddress = Address::where('id', $validated['user_address'])
+                ->where('user_id', Auth::id())
+                ->firstOrFail();
+        }
 
         $updateForm = [
             'cargo' => $validated['cargo'],
@@ -467,15 +475,18 @@ class MasterController extends Controller
         }
         $this->assertOrderStockBeforeFinalize($orderItems);
 
-        $tokenAddress = date('His')*rand(999,99999);
-        $formData['address_token'] = $tokenAddress;
-        $formData['user_id'] = Auth::user()->id;
-        $insert = Address::create($formData);
+        if (!$selectedAddress) {
+            $tokenAddress = date('His')*rand(999,99999);
+            $formData['address_token'] = $tokenAddress;
+            $formData['user_id'] = Auth::id();
+            $selectedAddress = Address::create($formData);
+        }
+
         $findCargo = Cargos::where('id',$request->cargo)->firstOrFail();
         $toplamTutar = $findOrder->total+$findCargo->cargo_price;
 
         $updateForm['total'] = $toplamTutar;
-        $updateForm['user_address'] = $tokenAddress;
+        $updateForm['user_address'] = $selectedAddress->id;
         $updateForm['payment_status'] = "0";
         $updateOrder->update($updateForm);
 
@@ -517,7 +528,7 @@ class MasterController extends Controller
             $payment_amount	= $toplamTutar*100;
             $merchant_oid = $order_token;
             $user_name = $user->name;
-            $user_address = $request->address;
+            $user_address = $selectedAddress->address;
             $user_phone = $user->user_phone;
             $merchant_ok_url = env('APP_URL','/siparis-tamamlandi',$order_token); //paytr callback tarafında aynı url olmayacak hataya sebep olur
             $merchant_fail_url = env('APP_URL','/siparis-basarisiz',$order_token);
@@ -675,7 +686,7 @@ class MasterController extends Controller
     {
         $data = Orders::where('order_no',$order_token)->firstOrFail();
         $items = Orderitems::where('order_token',$data->order_no)->get();
-        $address = Address::where('address_token',$data->user_address)->first();
+        $address = Address::where('id', $data->user_address)->orWhere('address_token', $data->user_address)->first();
         return view('order::backend.items.order.invoice',compact('data','items','address'));
     }
 
