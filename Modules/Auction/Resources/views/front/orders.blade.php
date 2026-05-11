@@ -47,11 +47,16 @@
                                 <td>{{ $order->order_no }}</td>
                                 <td>{{ optional($order->auction)->title ?? '-' }}</td>
                                 <td>{{ optional(optional($order->item)->product)->title ?? optional($order->item)->custom_title ?? '-' }}</td>
-                                <td>{{ number_format($order->final_price, 2) }} TL</td>
+                                <td>{{ number_format($order->total_amount, 2) }} TL</td>
                                 <td>{{ $winTypeLabels[$order->win_type] ?? $order->win_type }}</td>
                                 <td><span class="badge bg-{{ $statusMeta['class'] }}">{{ $statusMeta['text'] }}</span></td>
                                 <td>{{ optional($order->created_at)->format('d.m.Y H:i') }}</td>
-                                <td><a class="btn btn-sm btn-primary" href="{{ route('auction_live_order_detail', $order) }}">Detay</a></td>
+                                <td>
+                                    @if(!$order->isCheckoutCompleted())
+                                        <a class="btn btn-sm btn-success" href="{{ route('auction_live_checkout', $order) }}">Tamamla</a>
+                                    @endif
+                                    <a class="btn btn-sm btn-primary" href="{{ route('auction_live_order_detail', $order) }}">Detay</a>
+                                </td>
                             </tr>
                         @empty
                             <tr><td colspan="8" class="text-center">Henüz mezattan oluşmuş siparişiniz yok.</td></tr>

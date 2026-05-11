@@ -8,6 +8,7 @@ use App\Models\AuctionBid;
 use App\Models\AuctionItem;
 use App\Models\AuctionOrder;
 use App\Models\Address;
+use App\Models\Cargos;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -32,7 +33,7 @@ class MasterController extends Controller
 
     public function myOrders()
     {
-        $orders = AuctionOrder::with(['auction', 'item.product'])
+        $orders = AuctionOrder::with(['auction', 'item.product', 'cargo'])
             ->where('user_id', Auth::id())
             ->latest()
             ->paginate(20);
@@ -43,25 +44,91 @@ class MasterController extends Controller
     public function orderDetail(AuctionOrder $order)
     {
         abort_unless((int) $order->user_id === (int) Auth::id(), 403);
-        $order->load(['auction', 'item.product', 'user']);
+        $order->load(['auction', 'item.product', 'user', 'cargo']);
         return view('auction::front.order-detail', compact('order'));
+    }
+
+    public function checkout(AuctionOrder $order)
+    {
+        abort_unless((int) $order->user_id === (int) Auth::id(), 403);
+
+        if ($order->isCheckoutCompleted()) {
+            return redirect()->route('auction_live_order_detail', $order);
+        }
+
+        $order->load(['auction', 'item.product', 'cargo']);
+        $address = Address::where('user_id', Auth::id())->get();
+        $cargos = Cargos::where('status', 1)->orderBy('id')->get();
+        if ($cargos->isEmpty()) {
+            $cargos = Cargos::orderBy('id')->get();
+        }
+
+        return view('auction::front.checkout', compact('order', 'address', 'cargos'));
+    }
+
+    public function completeCheckout(Request $request, AuctionOrder $order)
+    {
+        abort_unless((int) $order->user_id === (int) Auth::id(), 403);
+        $order->load('auction');
+
+        $paymentRule = $order->auction && $order->auction->requires_balance ? 'nullable|in:balance' : 'required|in:bank_transfer,cash_on_delivery';
+        $validated = $request->validate([
+            'user_address' => ['nullable', 'integer', 'exists:address,id'],
+            'address_title' => ['required_without:user_address', 'nullable', 'string', 'max:255'],
+            'city' => ['required_without:user_address', 'nullable', 'string', 'max:255'],
+            'town' => ['required_without:user_address', 'nullable', 'string', 'max:255'],
+            'address' => ['required_without:user_address', 'nullable', 'string', 'max:1000'],
+            'postal_code' => ['required_without:user_address', 'nullable', 'string', 'max:50'],
+            'phone' => ['required_without:user_address', 'nullable', 'string', 'max:30'],
+            'cargo' => ['required', 'integer', 'exists:cargos,id'],
+            'payment_method' => $paymentRule,
+        ]);
+
+        $selectedAddress = null;
+        if (!empty($validated['user_address'])) {
+            $selectedAddress = Address::where('id', $validated['user_address'])->where('user_id', Auth::id())->firstOrFail();
+        }
+
+        if (!$selectedAddress) {
+            $selectedAddress = Address::create([
+                'address_title' => $validated['address_title'] ?? null,
+                'city' => $validated['city'] ?? null,
+                'town' => $validated['town'] ?? null,
+                'address' => $validated['address'] ?? null,
+                'postal_code' => $validated['postal_code'] ?? null,
+                'phone' => $validated['phone'] ?? null,
+                'address_token' => date('His') * rand(999, 99999),
+                'user_id' => Auth::id(),
+            ]);
+        }
+
+        $cargo = Cargos::findOrFail($validated['cargo']);
+        $order->update([
+            'address_snapshot' => trim(($selectedAddress->city ?? '') . ' / ' . ($selectedAddress->town ?? '') . ' - ' . ($selectedAddress->address ?? '')),
+            'cargo_id' => $cargo->id,
+            'cargo_price' => (float) $cargo->cargo_price,
+            'payment_method' => $order->auction && $order->auction->requires_balance ? 'balance' : $validated['payment_method'],
+            'checkout_completed_at' => now(),
+            'status' => 'processing',
+        ]);
+
+        return redirect()->route('auction_live_order_detail', $order)->with('success', 'Mezat siparişiniz tamamlandı.');
     }
 
     public function bid(Request $request, AuctionItem $item)
     {
         $request->validate(['amount' => 'required|numeric|min:0.01']);
+        $item->loadMissing('auction');
+        $requiresBalance = (bool) optional($item->auction)->requires_balance;
 
         if ($item->status !== 'live') {
             return back()->with('error', 'Bu ürün için mezat kapalı.');
         }
 
         $user = Auth::user();
-        if (!$this->userHasAddress($user->id)) {
-            return back()->with('error', 'Mezat için teklif vermeden önce kayıtlı adres eklemelisiniz.');
-        }
 
         try {
-            DB::transaction(function () use ($item, $user, $request) {
+            DB::transaction(function () use ($item, $user, $request, $requiresBalance) {
                 $item = AuctionItem::lockForUpdate()->findOrFail($item->id);
                 if ($item->status !== 'live') {
                     throw ValidationException::withMessages(['amount' => 'Bu ürün için mezat kapalı.']);
@@ -77,35 +144,41 @@ class MasterController extends Controller
                 throw ValidationException::withMessages(['amount' => 'Teklif, hemen al fiyatını geçemez.']);
             }
 
-            if ((float) $user->balance < $amount) {
-                throw ValidationException::withMessages(['amount' => 'Yetersiz bakiye.']);
-            }
-
             $myActiveBids = $item->bids()
                 ->where('status', 'active')
                 ->where('user_id', $user->id)
                 ->lockForUpdate()
                 ->get();
 
+            $refundAmount = (float) $myActiveBids->sum('amount');
+            if ($requiresBalance && ((float) $user->balance + $refundAmount) < $amount) {
+                throw ValidationException::withMessages(['amount' => 'Yetersiz bakiye.']);
+            }
+
             if ($myActiveBids->isNotEmpty()) {
-                $refundAmount = (float) $myActiveBids->sum('amount');
-                $user->balance = (float) $user->balance + $refundAmount;
+                if ($requiresBalance) {
+                    $user->balance = (float) $user->balance + $refundAmount;
+                }
                 $myActiveBids->each->update(['status' => 'outbid_refunded']);
             }
 
             if ($highest && (int) $highest->user_id !== (int) $user->id) {
                 $prevUser = $highest->user()->lockForUpdate()->first();
-                $prevUser->balance = (float) $prevUser->balance + (float) $highest->amount;
-                $prevUser->save();
+                if ($requiresBalance) {
+                    $prevUser->balance = (float) $prevUser->balance + (float) $highest->amount;
+                    $prevUser->save();
+                }
                 $highest->update(['status' => 'outbid_refunded']);
             }
 
 
-            $user->balance = (float) $user->balance - $amount;
-            if ($user->balance < 0) {
-                throw ValidationException::withMessages(['amount' => 'Bakiye eksiye düşemez.']);
+            if ($requiresBalance) {
+                $user->balance = (float) $user->balance - $amount;
+                if ($user->balance < 0) {
+                    throw ValidationException::withMessages(['amount' => 'Bakiye eksiye düşemez.']);
+                }
+                $user->save();
             }
-            $user->save();
 
             AuctionBid::create([
                 'auction_item_id' => $item->id,
@@ -145,38 +218,39 @@ class MasterController extends Controller
         }
 
         $user = Auth::user();
-        if (!$this->userHasAddress($user->id)) {
-            return back()->with('error', 'Hemen al için kayıtlı adres zorunludur.');
-        }
+        $item->loadMissing('auction');
+        $requiresBalance = (bool) optional($item->auction)->requires_balance;
 
-        DB::transaction(function () use ($item, $user) {
+        DB::transaction(function () use ($item, $user, $requiresBalance) {
             $item = AuctionItem::with('auction')->lockForUpdate()->findOrFail($item->id);
             if ($item->status !== 'live') {
                 abort(422, 'Bu ürün için mezat kapalı.');
             }
 
             $buyNowPrice = (float) $item->buy_now_price;
-            if ((float) $user->balance < $buyNowPrice) {
-                abort(422, 'Yetersiz bakiye.');
-            }
 
             $highest = $item->bids()->orderByDesc('amount')->first();
             if ($highest) {
                 $prevUser = $highest->user()->lockForUpdate()->first();
-                if ($highest->user_id !== $user->id) {
+                if ($requiresBalance && $highest->user_id !== $user->id) {
                     $prevUser->balance = (float) $prevUser->balance + (float) $highest->amount;
                     $prevUser->save();
                 }
                 $highest->update(['status' => 'outbid_refunded']);
             }
 
-            $alreadyHeld = $highest && (int) $highest->user_id === (int) $user->id ? (float) $highest->amount : 0.0;
-            $deduct = max(0, $buyNowPrice - $alreadyHeld);
-            $user->balance = (float) $user->balance - $deduct;
-            if ($user->balance < 0) {
-                abort(422, 'Bakiye eksiye düşemez.');
+            if ($requiresBalance) {
+                $alreadyHeld = $highest && (int) $highest->user_id === (int) $user->id ? (float) $highest->amount : 0.0;
+                $deduct = max(0, $buyNowPrice - $alreadyHeld);
+                if ((float) $user->balance < $deduct) {
+                    abort(422, 'Yetersiz bakiye.');
+                }
+                $user->balance = (float) $user->balance - $deduct;
+                if ($user->balance < 0) {
+                    abort(422, 'Bakiye eksiye düşemez.');
+                }
+                $user->save();
             }
-            $user->save();
 
             AuctionBid::create([
                 'auction_item_id' => $item->id,
@@ -218,6 +292,16 @@ class MasterController extends Controller
         $openingBid = $current ? ((float) $current->start_price + (float) $current->min_increment) : null;
         $nextMinBid = $current ? ($highest ? ((float) $highest->amount + (float) $current->min_increment) : $openingBid) : null;
 
+        $checkoutRedirectUrl = null;
+        if (Auth::check()) {
+            $checkoutOrder = AuctionOrder::where('auction_id', $auction->id)
+                ->where('user_id', Auth::id())
+                ->whereNull('checkout_completed_at')
+                ->latest('id')
+                ->first();
+            $checkoutRedirectUrl = $checkoutOrder ? route('auction_live_checkout', $checkoutOrder) : null;
+        }
+
         return response()->json([
             'auction' => $auction,
             'current' => $current,
@@ -226,23 +310,14 @@ class MasterController extends Controller
             'nextMinBid' => $nextMinBid,
             'remainingSeconds' => $current ? $this->remainingSeconds($current) : null,
             'authBalance' => Auth::check() ? number_format((float) Auth::user()->balance, 2, '.', '') : null,
+            'checkoutRedirectUrl' => $checkoutRedirectUrl,
         ]);
-    }
-
-    private function userHasAddress(int $userId): bool
-    {
-        return Address::where('user_id', $userId)->exists();
     }
 
     private function createAuctionOrder(AuctionItem $item, int $userId, float $amount, string $winType): void
     {
         if (AuctionOrder::where('auction_item_id', $item->id)->exists()) {
             return;
-        }
-
-        $address = Address::where('user_id', $userId)->latest('id')->first();
-        if (!$address) {
-            abort(422, 'Sipariş için kayıtlı adres bulunamadı.');
         }
 
         AuctionOrder::create([
@@ -252,7 +327,7 @@ class MasterController extends Controller
             'product_id' => $item->product_id,
             'order_no' => 'MZT-' . now()->format('YmdHis') . '-' . $item->id,
             'final_price' => $amount,
-            'address_snapshot' => trim(($address->city ?? '') . ' / ' . ($address->town ?? '') . ' - ' . ($address->address ?? '')),
+            'address_snapshot' => '',
             'win_type' => $winType,
             'status' => 'pending',
         ]);
@@ -279,10 +354,6 @@ class MasterController extends Controller
             if (!$highest) {
                 $item->update(['status' => 'unsold', 'ended_at' => now()]);
                 return;
-            }
-
-            if (!$this->userHasAddress((int) $highest->user_id)) {
-                abort(422, 'Kazanan kullanıcının kayıtlı adresi bulunmuyor.');
             }
 
             $highest->update(['status' => 'winner']);

@@ -7,7 +7,6 @@ use App\Models\Auction;
 use App\Models\AuctionBid;
 use App\Models\AuctionItem;
 use App\Models\AuctionOrder;
-use App\Models\Address;
 use App\Models\Products;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -26,7 +25,7 @@ class SystemController extends Controller
 
     public function orders()
     {
-        $orders = AuctionOrder::with(['auction', 'item.product', 'user'])
+        $orders = AuctionOrder::with(['auction', 'item.product', 'user', 'cargo'])
             ->latest()
             ->paginate(50);
 
@@ -35,14 +34,22 @@ class SystemController extends Controller
 
     public function showOrder(AuctionOrder $order)
     {
-        $order->load(['auction', 'item.product', 'user']);
+        $order->load(['auction', 'item.product', 'user', 'cargo']);
         return view('auction::admin.order-detail', compact('order'));
     }
 
     public function store(Request $request)
     {
-        $request->validate(['title' => 'required|string|max:255']);
-        Auction::create(['title' => $request->title, 'created_by' => Auth::id()]);
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'requires_balance' => 'required|boolean',
+        ]);
+
+        Auction::create([
+            'title' => $validated['title'],
+            'requires_balance' => (bool) $validated['requires_balance'],
+            'created_by' => Auth::id(),
+        ]);
         return back()->with('success', 'Mezat oluşturuldu.');
     }
 
@@ -217,9 +224,6 @@ class SystemController extends Controller
         DB::transaction(function () use ($item) {
             $highest = $item->bids()->orderByDesc('amount')->first();
             if ($highest) {
-                if (!$this->userHasAddress((int) $highest->user_id)) {
-                    abort(422, 'Kazanan kullanıcının kayıtlı adresi bulunmuyor.');
-                }
                 $highest->update(['status' => 'winner']);
                 $item->update([
                     'status' => 'sold',
@@ -250,20 +254,10 @@ class SystemController extends Controller
         $auction->update(['current_item_id' => $next->id, 'status' => 'live']);
     }
 
-    private function userHasAddress(int $userId): bool
-    {
-        return Address::where('user_id', $userId)->exists();
-    }
-
     private function createAuctionOrder(AuctionItem $item, int $userId, float $amount, string $winType): void
     {
         if (AuctionOrder::where('auction_item_id', $item->id)->exists()) {
             return;
-        }
-
-        $address = Address::where('user_id', $userId)->latest('id')->first();
-        if (!$address) {
-            abort(422, 'Sipariş için kayıtlı adres bulunamadı.');
         }
 
         AuctionOrder::create([
@@ -273,7 +267,7 @@ class SystemController extends Controller
             'product_id' => $item->product_id,
             'order_no' => 'MZT-' . now()->format('YmdHis') . '-' . $item->id,
             'final_price' => $amount,
-            'address_snapshot' => trim(($address->city ?? '') . ' / ' . ($address->town ?? '') . ' - ' . ($address->address ?? '')),
+            'address_snapshot' => '',
             'win_type' => $winType,
             'status' => 'pending',
         ]);

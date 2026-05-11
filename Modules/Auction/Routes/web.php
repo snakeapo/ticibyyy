@@ -13,6 +13,8 @@ Route::controller(AuctionFrontendController::class)->group(function () {
         Route::post('/mezat/item/{item}/bid', 'bid')->name('auction_live_bid');
         Route::post('/mezat/item/{item}/buy-now', 'buyNow')->name('auction_live_buy_now');
         Route::get('/mezat-siparislerim', 'myOrders')->name('auction_live_my_orders');
+        Route::get('/mezat-siparis/{order}/tamamla', 'checkout')->name('auction_live_checkout');
+        Route::post('/mezat-siparis/{order}/tamamla', 'completeCheckout')->name('auction_live_checkout_post');
         Route::get('/mezat-siparislerim/{order}', 'orderDetail')->name('auction_live_order_detail');
     });
 });

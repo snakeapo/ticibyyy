@@ -1,8 +1,11 @@
 @extends('page::frontend.layout.master')
 @section('content')
 <main class="main-wrapper">
-<div class="container py-5" id="auctionApp" data-state-url="{{ route('auction_live_state', $auction) }}">
+<div class="container py-5" id="auctionApp" data-state-url="{{ route('auction_live_state', $auction) }}" data-current-item-id="{{ optional($current)->id }}" data-auction-status="{{ $auction->status }}">
     <h3>{{ $auction->title }}</h3>
+    <div class="alert {{ $auction->requires_balance ? 'alert-success' : 'alert-warning' }} py-2">
+        {{ $auction->requires_balance ? 'Bu mezatta teklifler bakiye üzerinden alınır. Kazanınca adres ve kargo bilgisiyle siparişi tamamlamanız gerekir.' : 'Bu mezatta teklif için bakiye şartı yoktur. Kazanınca Havale/EFT veya Kapıda Ödeme ile siparişi tamamlayabilirsiniz.' }}
+    </div>
     @php
         $isBidOpen = $current && $current->status === 'live';
     @endphp
@@ -50,7 +53,11 @@
             </div>
             <div class="col-md-5">
                 @auth
-                    <p>Bakiye: <b id="authBalance">{{ number_format(Auth::user()->balance,2) }}</b> TL</p>
+                    @if($auction->requires_balance)
+                        <p>Bakiye: <b id="authBalance">{{ number_format(Auth::user()->balance,2) }}</b> TL</p>
+                    @else
+                        <p class="text-muted">Bakiyesiz mezat: teklif verirken bakiyenizden düşüm yapılmaz.</p>
+                    @endif
                     @if($isBidOpen)
                         <form action="{{ route('auction_live_bid', $current) }}" method="post" class="d-flex gap-2 mb-3">
                             @csrf
@@ -174,6 +181,19 @@ if (root) {
             }
 
             const data = await res.json();
+
+            if (data?.checkoutRedirectUrl) {
+                window.location.href = data.checkoutRedirectUrl;
+                return;
+            }
+
+            const latestCurrentId = data?.current?.id ? String(data.current.id) : '';
+            const latestAuctionStatus = data?.auction?.status ? String(data.auction.status) : '';
+            if (latestCurrentId !== (root.dataset.currentItemId || '') || latestAuctionStatus !== (root.dataset.auctionStatus || '')) {
+                window.location.reload();
+                return;
+            }
+
             renderBids(data?.bids);
 
             const authBalanceNode = document.getElementById('authBalance');
