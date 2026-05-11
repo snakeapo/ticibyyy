@@ -215,24 +215,24 @@
 
                                             <div class="form-floating mb-3">
                                                 <select class="form-select" name="has_return">
-                                                    <option value="1" @selected((string) $data->has_return === '1')>Evet</option>
-                                                    <option value="0" @selected((string) $data->has_return === '0')>Hayır</option>
+                                                    <option value="1" @selected( $data->has_return == '1')>Evet</option>
+                                                    <option value="0" @selected( $data->has_return == '0')>Hayır</option>
                                                 </select>
                                                 <label>İade Var mı?</label>
                                             </div>
 
                                             <div class="form-floating mb-3">
                                                 <select class="form-select" name="has_exchange">
-                                                    <option value="1" @selected((string) $data->has_exchange === '1')>Evet</option>
-                                                    <option value="0" @selected((string) $data->has_exchange === '0')>Hayır</option>
+                                                    <option value="1" @selected( $data->has_exchange == '1')>Evet</option>
+                                                    <option value="0" @selected( $data->has_exchange == '0')>Hayır</option>
                                                 </select>
                                                 <label>Değişim Var mı?</label>
                                             </div>
 
                                             <div class="form-floating mb-3">
                                                 <select class="form-select" name="whatsapp_order_enabled">
-                                                    <option value="1" @selected((string) $data->whatsapp_order_enabled === '1')>Evet</option>
-                                                    <option value="0" @selected((string) $data->whatsapp_order_enabled === '0')>Hayır</option>
+                                                    <option value="1" @selected($data->whatsapp_order_enabled == '1')>Evet</option>
+                                                    <option value="0" @selected($data->whatsapp_order_enabled == '0')>Hayır</option>
                                                 </select>
                                                 <label>WhatsApp Siparişe Uygun mu?</label>
                                             </div>
