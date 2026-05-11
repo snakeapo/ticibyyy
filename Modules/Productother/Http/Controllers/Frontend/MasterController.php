@@ -32,26 +32,44 @@ class MasterController extends Controller
     }
 
     // Favories insert
-    public function product_favories($urun_no)
+    public function product_favories(Request $request, $urun_no)
     {
-        if (Auth::check()) {
-            $c = Products::where('product_token', $urun_no)->count();
-            if ($c != 0) {
-                $control = Favories::where('product_token', $urun_no)->where('user_id', Auth::user()->id)->count();
-                if ($control == 0) {
-                    $product = Products::where('product_token', $urun_no)->firstOrFail();
-                    Favories::create(['product_id' => $product->id, 'product_token' => $urun_no, 'user_id' => Auth::user()->id]);
-                    return back()->with('success', 'Favorilere Eklendi.!');
-                }
-
-                Favories::where('product_token', $urun_no)->where('user_id', Auth::user()->id)->delete();
-                return back()->with('success', 'Favorilerden Kaldırıldı.!');
+        if (!Auth::check()) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Lütfen Giriş Yapın.!',
+                ], 401);
             }
 
-            abort(404);
+            return back()->with('error', 'Lütfen Giriş Yapın.!');
         }
 
-        return back()->with('error', 'Lütfen Giriş Yapın.!');
+        $product = Products::where('product_token', $urun_no)->firstOrFail();
+        $favorite = Favories::where('product_token', $urun_no)->where('user_id', Auth::id())->first();
+
+        if ($favorite) {
+            $favorite->delete();
+            $saved = false;
+            $message = 'Favorilerden Kaldırıldı.!';
+        } else {
+            Favories::create([
+                'product_id' => $product->id,
+                'product_token' => $urun_no,
+                'user_id' => Auth::id(),
+            ]);
+            $saved = true;
+            $message = 'Favorilere Eklendi.!';
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'saved' => $saved,
+                'product_token' => $urun_no,
+                'message' => $message,
+            ]);
+        }
+
+        return back()->with('success', $message);
     }
 
     // Compare

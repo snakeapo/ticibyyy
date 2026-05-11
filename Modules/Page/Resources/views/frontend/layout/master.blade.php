@@ -238,6 +238,133 @@
     @endforeach
     @endif
 </script>
+<script>
+    (function () {
+        const favoriteToggleSelector = '[data-favorite-toggle]';
+        const favoriteDeleteSelector = 'form[data-favorite-delete]';
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+        const notify = (type, message) => {
+            if (!message || typeof notyf === 'undefined') return;
+
+            if (type === 'success') {
+                notyf.success(message);
+                return;
+            }
+
+            notyf.error(message);
+        };
+
+        const setLoading = (element, loading) => {
+            element.classList.toggle('disabled', loading);
+            element.setAttribute('aria-busy', loading ? 'true' : 'false');
+
+            if ('disabled' in element) {
+                element.disabled = loading;
+            }
+        };
+
+        const syncFavoriteButtons = (productToken, saved) => {
+            document.querySelectorAll(favoriteToggleSelector).forEach((button) => {
+                if (button.dataset.productToken !== String(productToken)) return;
+
+                const icon = button.querySelector('.ci-heart');
+                const label = saved ? 'Favorilerden kaldır' : 'Favorilere ekle';
+
+                button.dataset.favoriteSaved = saved ? '1' : '0';
+                button.setAttribute('aria-pressed', saved ? 'true' : 'false');
+                button.setAttribute('aria-label', label);
+                button.setAttribute('data-bs-title', label);
+                icon?.classList.toggle('text-danger', saved);
+
+                const tooltip = window.bootstrap?.Tooltip?.getInstance(button);
+                if (tooltip) {
+                    tooltip.setContent({'.tooltip-inner': label});
+                }
+            });
+        };
+
+        document.addEventListener('click', async (event) => {
+            const button = event.target.closest(favoriteToggleSelector);
+            if (!button) return;
+
+            event.preventDefault();
+
+            if (button.classList.contains('disabled')) return;
+
+            setLoading(button, true);
+
+            try {
+                const response = await fetch(button.href, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    credentials: 'same-origin',
+                });
+
+                const data = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    notify('error', data.message || 'Favori işlemi tamamlanamadı.');
+                    return;
+                }
+
+                syncFavoriteButtons(data.product_token || button.dataset.productToken, Boolean(data.saved));
+                notify('success', data.message);
+            } catch (error) {
+                notify('error', 'Bağlantı hatası nedeniyle favori işlemi tamamlanamadı.');
+            } finally {
+                setLoading(button, false);
+            }
+        });
+
+        document.addEventListener('submit', async (event) => {
+            const form = event.target.closest(favoriteDeleteSelector);
+            if (!form) return;
+
+            event.preventDefault();
+
+            const confirmMessage = form.dataset.confirm;
+            if (confirmMessage && !window.confirm(confirmMessage)) return;
+
+            const submitButton = form.querySelector('[type="submit"]');
+            if (submitButton) setLoading(submitButton, true);
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: formData,
+                    credentials: 'same-origin',
+                });
+
+                const data = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    notify('error', data.message || 'Favori silme işlemi tamamlanamadı.');
+                    return;
+                }
+
+                const productToken = data.product_token || form.dataset.productToken;
+                syncFavoriteButtons(productToken, false);
+                form.closest('[data-favorite-card]')?.remove();
+                notify('success', data.message);
+            } catch (error) {
+                notify('error', 'Bağlantı hatası nedeniyle favori silme işlemi tamamlanamadı.');
+            } finally {
+                if (submitButton) setLoading(submitButton, false);
+            }
+        });
+    })();
+</script>
 <!-- Vendor scripts -->
 <script src="{{ asset('/frontend/assets/vendor/swiper/swiper-bundle.min.js') }}"></script>
 <script src="{{ asset('frontend/assets/vendor/drift-zoom/dist/Drift.min.js') }}"></script>

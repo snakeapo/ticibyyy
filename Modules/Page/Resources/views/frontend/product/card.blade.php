@@ -17,16 +17,16 @@
                 <div class="position-relative">
 
                     {{-- Wishlist --}}
+                    @php($isSaved = \App\Models\Favories::isSave($take->product_token))
                     <div class="position-absolute top-0 end-0 z-2 mt-3 me-3">
-                        <a href="{{route('product_favories',$take->product_token)}}"
-                           class="btn btn-icon btn-secondary">
-
-                            @if(\App\Models\Favories::isSave($take->product_token))
-                                <i class="ci-heart text-danger"></i>
-                            @else
-                                <i class="ci-heart"></i>
-                            @endif
-
+                        <a href="{{ route('product_favories', $take->product_token) }}"
+                           class="btn btn-icon btn-secondary"
+                           data-favorite-toggle
+                           data-product-token="{{ $take->product_token }}"
+                           data-favorite-saved="{{ $isSaved ? '1' : '0' }}"
+                           aria-pressed="{{ $isSaved ? 'true' : 'false' }}"
+                           aria-label="{{ $isSaved ? 'Favorilerden kaldır' : 'Favorilere ekle' }}">
+                            <i class="ci-heart {{ $isSaved ? 'text-danger' : '' }}"></i>
                         </a>
                     </div>
 

@@ -86,12 +86,21 @@ class MasterController extends Controller
         return view('customer::frontend.user.favories',compact('data'));
     }
 
-    public function favories_delete($id)
+    public function favories_delete(Request $request, $id)
     {
-        $data = Favories::where('id',$id)->where('user_id',Auth::user()->id)->firstOrFail();
+        $data = Favories::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $productToken = $data->product_token;
         $data->delete();
 
-        return back()->with('success','Ürün favorilerden silindi');
+        if ($request->expectsJson()) {
+            return response()->json([
+                'saved' => false,
+                'product_token' => $productToken,
+                'message' => 'Ürün favorilerden silindi',
+            ]);
+        }
+
+        return back()->with('success', 'Ürün favorilerden silindi');
     }
 
     public function my_address()
