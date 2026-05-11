@@ -244,6 +244,9 @@ class SystemController extends Controller
             'sub_category' => ['required', 'exists:subcategories,id'],
             'brand' => ['required', 'exists:brands,id'],
             'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:4096'],
+            'has_return' => ['required', 'boolean'],
+            'has_exchange' => ['required', 'boolean'],
+            'whatsapp_order_enabled' => ['required', 'boolean'],
         ], [], [
             'title' => 'ürün adı',
             'price' => 'fiyat',
@@ -252,6 +255,9 @@ class SystemController extends Controller
             'sub_category' => 'alt kategori',
             'brand' => 'marka',
             'image' => 'ürün resmi',
+            'has_return' => 'iade durumu',
+            'has_exchange' => 'değişim durumu',
+            'whatsapp_order_enabled' => 'WhatsApp sipariş durumu',
         ]);
         $validated = $validator->validate();
 
@@ -271,6 +277,9 @@ class SystemController extends Controller
             'stock' => $validated['stock'],
             'image' => $fileName,
             'difference' => '0',
+            'has_return' => (bool) $validated['has_return'],
+            'has_exchange' => (bool) $validated['has_exchange'],
+            'whatsapp_order_enabled' => (bool) $validated['whatsapp_order_enabled'],
             'product_token' => date('His') * rand(99, 99999),
             'status' => 1,
         ]);

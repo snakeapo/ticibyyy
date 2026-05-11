@@ -25,11 +25,20 @@ class Products extends Model
         'installment',
         'our_choice',
         'best_selling',
+        'has_return',
+        'has_exchange',
+        'whatsapp_order_enabled',
         'product_token',
         'meta_title',
         'meta_keyw',
         'meta_desc',
         'status',
+    ];
+
+    protected $casts = [
+        'has_return' => 'boolean',
+        'has_exchange' => 'boolean',
+        'whatsapp_order_enabled' => 'boolean',
     ];
 
     public function getCategory()

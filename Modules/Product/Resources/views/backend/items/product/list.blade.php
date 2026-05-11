@@ -91,6 +91,27 @@
                             <label>Ürün Resmi</label>
                             <input name="image" type="file" accept="image/*" class="form-control" required>
                         </div>
+                        <div class="col-md-4">
+                            <label>İade Var mı?</label>
+                            <select name="has_return" class="form-select" required>
+                                <option value="0" selected>Hayır</option>
+                                <option value="1">Evet</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label>Değişim Var mı?</label>
+                            <select name="has_exchange" class="form-select" required>
+                                <option value="0" selected>Hayır</option>
+                                <option value="1">Evet</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label>WhatsApp Siparişe Uygun mu?</label>
+                            <select name="whatsapp_order_enabled" class="form-select" required>
+                                <option value="0" selected>Hayır</option>
+                                <option value="1">Evet</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Kapat</button><button class="btn btn-success">Kaydet</button></div>

@@ -394,6 +394,31 @@
                                         <label for="floatingSelect">Çok Satan</label>
                                     </div>
 
+                                    <div class="form-floating mb-3">
+                                        <select class="form-select" required name="has_return" id="has_return">
+                                            <option selected="" disabled>Seçim Yapın.</option>
+                                            <option value="1" @selected(old('has_return') == 1)>Evet</option>
+                                            <option value="0" @selected(old('has_return') == 0)>Hayır</option>
+                                        </select>
+                                        <label for="has_return">İade Var mı?</label>
+                                    </div>
+                                    <div class="form-floating mb-3">
+                                        <select class="form-select" required name="has_exchange" id="has_exchange">
+                                            <option selected="" disabled>Seçim Yapın.</option>
+                                            <option value="1" @selected(old('has_exchange') == 1)>Evet</option>
+                                            <option value="0" @selected(old('has_exchange') == 0)>Hayır</option>
+                                        </select>
+                                        <label for="has_exchange">Değişim Var mı?</label>
+                                    </div>
+                                    <div class="form-floating mb-3">
+                                        <select class="form-select" required name="whatsapp_order_enabled" id="whatsapp_order_enabled">
+                                            <option selected="" disabled>Seçim Yapın.</option>
+                                            <option value="1" @selected(old('whatsapp_order_enabled') == 1)>Evet</option>
+                                            <option value="0" @selected(old('whatsapp_order_enabled') == 0)>Hayır</option>
+                                        </select>
+                                        <label for="whatsapp_order_enabled">WhatsApp Siparişe Uygun mu?</label>
+                                    </div>
+
                                     <div class="col-md-12 mb-3">
                                         <label for="form-label">Meta Başlık</label>
                                         <input type="text" name="meta_title"  class="form-control" value="{{ old('meta_title') }}" id="" placeholder="">
