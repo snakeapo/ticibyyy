@@ -201,8 +201,11 @@ class MasterController extends Controller
     // Puan
     public static function calculateAverageRating($productId)
     {
-        $averageRating = Productcoms::where('status', 1)->where('product_id', $productId)->avg('point');
-        return round($averageRating);
+        $averageRating = Productcoms::where('status', 1)
+            ->where('product_id', $productId)
+            ->avg('point');
+
+        return round($averageRating ?? 0);
     }
 
     // Stok bildirim

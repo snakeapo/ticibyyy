@@ -18,7 +18,9 @@
             <div class="position-relative">
 
                 {{-- Wishlist --}}
-                @php($isSaved = \App\Models\Favories::isSave($take->product_token))
+                @php
+                    $isSaved = \App\Models\Favories::isSave($take->product_token)
+                @endphp
                 <div class="position-absolute top-0 end-0 z-2 mt-3 me-3">
                     <a href="{{ route('product_favories', $take->product_token) }}"
                        class="btn btn-icon btn-secondary"
