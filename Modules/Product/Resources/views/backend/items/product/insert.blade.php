@@ -183,6 +183,7 @@
                                             $oldParentNames = old('parent_variant_name', []);
                                             $oldPrices = old('variant_price', []);
                                             $oldStocks = old('variant_stock', []);
+                                            $oldIsColor = old('is_color', []);
                                         @endphp
 
                                         @if(count($oldNames) > 0)
@@ -237,7 +238,19 @@
                                                                    value="{{ $oldStocks[$i] ?? '' }}">
                                                             <label>Stok</label>
                                                         </div>
+                                                        <select name="is_color[]" class="form-control">
 
+                                                            <option value=""
+                                                                {{ old('is_color.' . $i, $oldIsColor[$i] ?? null) == null ? 'selected' : '' }}>
+                                                                Hayır
+                                                            </option>
+
+                                                            <option value="1"
+                                                                {{ old('is_color.' . $i, $oldIsColor[$i] ?? null) == 1 ? 'selected' : '' }}>
+                                                                Evet
+                                                            </option>
+
+                                                        </select>
                                                     </div>
                                                 </div>
                                             @endforeach
@@ -281,7 +294,16 @@
                                                         <input type="number" name="variant_stock[]" class="form-control">
                                                         <label>Stok</label>
                                                     </div>
+                                                    <div class="form-check mb-3">
 
+                                                        <select name="is_color[]" class="form-control" >
+                                                            <option value="">Hayır</option>
+                                                            <option value="1">Evet</option>
+                                                        </select>
+                                                        <label class="form-check-label" for="">
+                                                            Renk varyantı mı?
+                                                        </label>
+                                                    </div>
                                                 </div>
                                             </div>
                                         @endif

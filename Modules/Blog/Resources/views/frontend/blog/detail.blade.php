@@ -3,194 +3,120 @@
 @section('meta_desc'){{ $data->meta_desc }}@endsection
 @section('meta_keyw'){{ $data->meta_keyw }}@endsection
 @section('content')
-<main class="main-wrapper">
-    <!-- Start Blog Area  -->
-    <div class="axil-blog-area axil-section-gap">
-        <div class="axil-single-post post-formate post-standard">
-            <div class="container">
-                <div class="content-block">
-                    <div class="inner">
-                        <div class="post-thumbnail">
-                            <img src="/upload/blog/{{ $data->image }}" onerror="this.src='/extra/img/photo.png'" alt="{{ $data->blog_title }}">
-                        </div>
-                        <!-- End .thumbnail -->
+    <!-- Breadcrumb -->
+    <nav class="container pt-3 my-3 my-md-4" aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ route('home_index') }}">Anasayfa</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ $data->blog_title }}</li>
+        </ol>
+    </nav>
+
+
+    <!-- Post content + Sidebar -->
+    <section class="container pb-5 mb-2 mb-md-3 mb-lg-4 mb-xl-5">
+        <div class="row">
+
+            <!-- Posts content -->
+            <div class="col-lg-8 position-relative z-2">
+
+                <!-- Post title -->
+                <h1 class="h3 mb-4">{{ $data->blog_title }}</h1>
+
+                <!-- Post meta -->
+                <div class="nav align-items-center gap-2 border-bottom pb-4 mt-n1 mb-4">
+                    <a class="nav-link text-body fs-xs text-uppercase p-0" href="#!">{{ $data->getCategory->category_title }}</a>
+                    <hr class="vr my-1 mx-1">
+                    <span class="text-body-tertiary fs-xs">{{ \Carbon\Carbon::parse($data->created_at)->diffForHumans() }}</span>
+                </div>
+
+                <figure class="figure w-100 py-3 py-md-4 mb-3">
+                    <div class="ratio" style="--cz-aspect-ratio: calc(599 / 856 * 100%)">
+                        <img src="{{ asset('/upload/blog/'.$data->image) }}" class="rounded-4" alt="{{$data->blog_slug}}">
+                    </div>
+                </figure>
+                <p>{!! nl2br(e($data->blog_desc)) !!}</p>
+
+
+                <!-- Tags + Sharing -->
+                <div class="d-sm-flex align-items-center justify-content-between py-4 py-md-5 mt-n2 mt-md-n3 mb-2 mb-sm-3 mb-md-0">
+
+                    <div class="d-flex flex-wrap gap-2 mb-4 mb-sm-0 me-sm-4">
+
+                        @php
+                            $tags = explode(',', $data->blog_tag);
+                        @endphp
+
+                        @foreach($tags as $tag)
+
+                            <a class="btn btn-outline-secondary px-3 mt-1 me-1"
+                               href="#!">
+
+                                {{ trim($tag) }}
+
+                            </a>
+
+                        @endforeach
+
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="text-body-emphasis fs-sm fw-medium">Paylaş:</div>
+                        <a class="btn btn-icon fs-base btn-outline-secondary border-0" href="https://twitter.com/intent/tweet?text={{ env('APP_URL') }}/yazi/detay/{{ $data->blog_slug }}" data-bs-toggle="tooltip" data-bs-template="&lt;div class=&quot;tooltip fs-xs mb-n2&quot; role=&quot;tooltip&quot;&gt;&lt;div class=&quot;tooltip-inner bg-transparent text-body p-0&quot;&gt;&lt;/div&gt;&lt;/div&gt;" aria-label="Follow us on X" data-bs-original-title="X (Twitter)">
+                            <i class="ci-x"></i>
+                        </a>
+                        <a class="btn btn-icon fs-base btn-outline-secondary border-0" href="https://www.facebook.com/sharer/sharer.php?u={{ env('APP_URL') }}/yazi/detay/{{ $data->blog_slug }}" data-bs-toggle="tooltip" data-bs-template="&lt;div class=&quot;tooltip fs-xs mb-n2&quot; role=&quot;tooltip&quot;&gt;&lt;div class=&quot;tooltip-inner bg-transparent text-body p-0&quot;&gt;&lt;/div&gt;&lt;/div&gt;" aria-label="Follow us on Facebook" data-bs-original-title="Facebook">
+                            <i class="ci-facebook"></i>
+                        </a>
+                        <a class="btn btn-icon fs-base btn-outline-secondary border-0" href="https://www.linkedin.com/shareArticle?mini=true&url={{ env('APP_URL') }}/yazi/detay/{{ $data->blog_slug }}" data-bs-toggle="tooltip" data-bs-template="&lt;div class=&quot;tooltip fs-xs mb-n2&quot; role=&quot;tooltip&quot;&gt;&lt;div class=&quot;tooltip-inner bg-transparent text-body p-0&quot;&gt;&lt;/div&gt;&lt;/div&gt;" aria-label="Follow us on Telegram" data-bs-original-title="Telegram">
+                            <i class="ci-linkedin"></i>
+                        </a>
                     </div>
                 </div>
-                <!-- End .content-blog -->
-            </div>
-        </div>
-        <!-- End .single-post -->
-        <div class="post-single-wrapper position-relative">
-            <div class="container">
-                <div class="row">
-                    <div class="col-lg-1">
-                        <div class="d-flex flex-wrap align-content-start h-100">
-                            <div class="position-sticky sticky-top">
-                                <div class="post-details__social-share">
-                                    <span class="share-on-text">Paylaş:</span>
-                                    <div class="social-share">
-                                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ env('APP_URL') }}/yazi/detay/{{ $data->blog_slug }}" target="_blank"><i class="fab fa-facebook-f"></i></a>
-                                        <a href="https://twitter.com/intent/tweet?text={{ env('APP_URL') }}/yazi/detay/{{ $data->blog_slug }}" target="_blank"><i class="fab fa-twitter"></i></a>
-                                        <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ env('APP_URL') }}/yazi/detay/{{ $data->blog_slug }}"><i class="fab fa-linkedin-in"></i></a>
-                                    </div>
 
-                                </div>
-                            </div>
-                        </div>
+
+
+            </div>
+
+
+            <aside class="col-lg-4 col-xl-3 offset-xl-1" style="margin-top: -115px">
+                <div class="offcanvas-lg offcanvas-end sticky-lg-top ps-lg-4 ps-xl-0" id="blogSidebar">
+                    <div class="d-none d-lg-block" style="height: 115px"></div>
+                    <div class="offcanvas-header py-3">
+                        <h5 class="offcanvas-title">Sidebar</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#blogSidebar" aria-label="Close"></button>
                     </div>
-                    <div class="col-lg-7 axil-post-wrapper">
-                        <div class="post-heading">
-                            <h2 class="title">{{ $data->blog_title }}</h2>
-                            <div class="axil-post-meta">
-                                <div class="post-author-avatar">
-                                    <img src="/extra/img/profile.png" alt="author softby">
-                                </div>
-                                <div class="post-meta-content">
-                                    <h6 class="author-title">
-                                        <a href="#">Yönetici</a>
-                                    </h6>
-                                    <ul class="post-meta-list">
-                                        <li>{{ \Carbon\Carbon::parse($data->created_at)->diffForHumans() }}</li>
-                                        @if($data->blog_category != 0)
-                                            <li>{{ $data->getCategory->category_title }}</li>
-                                        @else
-                                        <li>Kategori Bulunamadı!</li>
-                                        @endif
-                                    </ul>
-                                </div>
-                            </div>
+                    <div class="offcanvas-body d-block pt-2 py-lg-0">
+                        <h4 class="h6 mb-4">Diğer kategoriler</h4>
+                        <div class="d-flex flex-wrap gap-3">
+                            @foreach (\App\Models\Blogcats::get() as $key)
+                                <a class="btn btn-outline-secondary px-3" href="{{ route('blog_category_detail',$key->category_slug) }}">{{ $key->category_title }}</a>
+                            @endforeach
+
                         </div>
 
-                        {!! $data->blog_desc !!}
-
-                    </div>
-
-                    <div class="col-lg-4">
-                        <!-- Start Sidebar Area  -->
-                        <aside class="axil-sidebar-area">
-
-                            <!-- Start Single Widget  -->
-                            <div class="axil-single-widget mt--40">
-                                <h6 class="widget-title">Son Yazılar</h6>
-
-                                @foreach (\App\Models\Blogs::orderBy('id','desc')->limit(5)->get() as $key)
-                                <!-- Start Single Post List  -->
-                                <div class="content-blog post-list-view mb--20">
-                                    <div class="thumbnail">
-                                        <a href="{{ route('blog_detail',$key->blog_slug) }}">
-                                            <img src="/upload/blog/{{ $key->image }}" alt="{{ $key->blog_title }}">
-                                        </a>
-                                    </div>
-                                    <div class="content">
-                                        <h6 class="title"><a href="{{ route('blog_detail',$key->blog_slug) }}">{{ $key->blog_title }}</a></h6>
-                                        <div class="axil-post-meta">
-                                            <div class="post-meta-content">
-                                                <ul class="post-meta-list">
-                                                    <li>{{ \Carbon\Carbon::parse($key->created_at)->diffForHumans() }}</li>
-                                                    @if($key->blog_category != 0)
-                                                    <li>{{ $key->getCategory->category_title }}</li>
-                                                    @else
-                                                    <li>Kategori Bulunamadı!</li>
-                                                    @endif
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- End Single Post List  -->
-                                @endforeach
-
-                            </div>
-                            <!-- End Single Widget  -->
-
-
-
-
-                            <!-- Start Single Widget  -->
-                            <div class="axil-single-widget mt--40 widget_archive">
-                                <h6 class="widget-title">Kategoriler</h6>
-                                <ul>
-                                    @foreach (\App\Models\Blogcats::get() as $key)
-                                        <li><a href="{{ route('blog_category_detail',$key->category_slug) }}">{{ $key->category_title }}</a></li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                            <!-- End Single Widget  -->
-
-
-                            <!-- Start Single Widget  -->
-                            <div class="axil-single-widget mt--40 widget_tag_cloud">
-                                <h6 class="widget-title">Anahtar Kelimeler</h6>
-                                <div class="tagcloud">
-
-                                    <a href="#" title="">{{$data->blog_tag}}</a>
-
-                                </div>
-                            </div>
-                            <!-- End Single Widget  -->
-
-                        </aside>
-                        <!-- End Sidebar Area -->
-                    </div>
-
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- End Blog Area  -->
-
-    <!-- Start Related Blog Area  -->
-    <div class="related-blog-area bg-color-white pb--60 pb_sm--40">
-        <div class="container">
-            <div class="section-title-wrapper mb--70 mb_sm--40 pr--110">
-                <span class="title-highlighter highlighter-primary mb--10"> <i class="fal fa-bell"></i>Yakın zamanda</span>
-                <h3 class="mb--25">Diğer Yazılarımız</h3>
-            </div>
-            <div class="related-blog-activation slick-layout-wrapper--15 axil-slick-arrow  arrow-top-slide">
-                @foreach (\App\Models\Blogs::inRandomOrder()->get() as $key)
-                <div class="slick-single-layout">
-                    <div class="content-blog">
-                        <div class="inner">
-                            <div class="axil-gallery-activation axil-slick-arrow arrow-between-side">
-                                <!-- Start Single Thumb  -->
-                                <div class="thumbnail">
-                                    <a href="{{ route('blog_detail',$key->blog_slug) }}">
-                                        <img src="/upload/blog/{{ $key->image }}" alt="{{ $key->blog_title }}">
-                                    </a>
-                                </div>
-                                <!-- End Single Thumb  -->
-                            </div>
-                            <div class="content">
-                                <h5 class="title"><a href="blog-details.html">{{ $key->blog_title }}</a></h5>
-                                <div class="axil-post-meta">
-                                    <div class="post-author-avatar">
-                                        <img src="/extra/img/profile.png" alt="author softby">
-                                    </div>
-                                    <div class="post-meta-content">
-                                        <h6 class="author-title">
-                                            <a href="#">Yönetici</a>
-                                        </h6>
-                                        <ul class="post-meta-list">
-                                            <li>{{ \Carbon\Carbon::parse($data->created_at)->diffForHumans() }}</li>
-                                            @if($data->blog_category != 0)
-                                            <li>{{ $data->getCategory->category_title }}</li>
-                                            @else
-                                            <li>Kategori Bulunamadı!</li>
-                                            @endif
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
+                        <h4 class="h6 pt-4">Sosyal medya</h4>
+                        <div class="d-flex gap-2 pb-2">
+                            <a class="btn btn-icon fs-base btn-outline-secondary border-0" href="{{ $setting->instagram }}" data-bs-toggle="tooltip" data-bs-template='<div class="tooltip fs-xs mb-n2" role="tooltip"><div class="tooltip-inner bg-transparent text-body p-0"></div></div>' title="Instagram" aria-label="Follow us on Instagram">
+                                <i class="ci-instagram"></i>
+                            </a>
+                            <a class="btn btn-icon fs-base btn-outline-secondary border-0" href="{{ $setting->twitter }}" data-bs-toggle="tooltip" data-bs-template='<div class="tooltip fs-xs mb-n2" role="tooltip"><div class="tooltip-inner bg-transparent text-body p-0"></div></div>' title="X (Twitter)" aria-label="Follow us on X">
+                                <i class="ci-x"></i>
+                            </a>
+                            <a class="btn btn-icon fs-base btn-outline-secondary border-0" href="{{ $setting->facebook }}" data-bs-toggle="tooltip" data-bs-template='<div class="tooltip fs-xs mb-n2" role="tooltip"><div class="tooltip-inner bg-transparent text-body p-0"></div></div>' title="Facebook" aria-label="Follow us on Facebook">
+                                <i class="ci-facebook"></i>
+                            </a>
+                            <a class="btn btn-icon fs-base btn-outline-secondary border-0" href="{{ $setting->youtube }}" data-bs-toggle="tooltip" data-bs-template='<div class="tooltip fs-xs mb-n2" role="tooltip"><div class="tooltip-inner bg-transparent text-body p-0"></div></div>' title="Telegram" aria-label="Follow us on Telegram">
+                                <i class="ci-youtube"></i>
+                            </a>
+                            <a class="btn btn-icon fs-base btn-outline-secondary border-0" href="{{ $setting->linkedin }}" data-bs-toggle="tooltip" data-bs-template='<div class="tooltip fs-xs mb-n2" role="tooltip"><div class="tooltip-inner bg-transparent text-body p-0"></div></div>' title="Telegram" aria-label="Follow us on Telegram">
+                                <i class="ci-linkedin"></i>
+                            </a>
+                            <a class="btn btn-icon fs-base btn-outline-secondary border-0" href="{{ $setting->pinterest }}" data-bs-toggle="tooltip" data-bs-template='<div class="tooltip fs-xs mb-n2" role="tooltip"><div class="tooltip-inner bg-transparent text-body p-0"></div></div>' title="Telegram" aria-label="Follow us on Telegram">
+                                <i class="ci-pinterest"></i>
+                            </a>
                         </div>
                     </div>
                 </div>
-                @endforeach
-            </div>
+            </aside>
         </div>
-    </div>
-    <!-- End Related Blog Area  -->
-
-
-</main>
-
+    </section>
 @endsection

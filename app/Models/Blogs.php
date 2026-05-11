@@ -12,7 +12,7 @@ class Blogs extends Model
         'blog_title',
         'blog_desc',
         'blog_slug',
-        'blog_category',
+        'category_id',
         'image',
         'blog_tag',
         'meta_title',
@@ -22,6 +22,6 @@ class Blogs extends Model
 
     public function getCategory()
     {
-        return $this->hasOne('App\Models\Blogcats','id','blog_category');
+        return $this->hasOne('App\Models\Blogcats','id','category_id');
     }
 }

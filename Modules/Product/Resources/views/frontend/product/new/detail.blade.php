@@ -1,8 +1,8 @@
 <!-- Breadcrumb -->
 <nav class="container pt-3 my-3 my-md-4" aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="home-electronics.html">Anasayfa</a></li>
-        <li class="breadcrumb-item"><a href="shop-catalog-electronics.html">Ürünler</a></li>
+        <li class="breadcrumb-item"><a href="{{ route('home_index') }}">Anasayfa</a></li>
+        <li class="breadcrumb-item"><a href="#">Ürünler</a></li>
         <li class="breadcrumb-item active" aria-current="page">{{ $data->title }}</li>
     </ol>
 </nav>
@@ -205,7 +205,9 @@
                                                         {{ (int) $key->variant_stock <= 0 ? 'disabled' : '' }}>
 
                                                     <span class="color-box"
-                                                          style="background-color: {{ $key->color_code ?? '#ccc' }}">
+                                                          >
+                                                        <img style="width: 100%;
+    height: 100%;" src="{{ asset('upload/product/'.$key->variant_image) }}" alt="">
                     </span>
 
                                                     <small>
@@ -249,7 +251,6 @@
                             @endforeach
 
                             <input type="hidden" name="variant" id="variantSelect" value="">
-                            <div id="variantStockWarning" class="alert alert-warning fs-sm  mt-2 d-none"></div>
 
                         @endif
 
@@ -405,7 +406,7 @@
                         <tr>
                             <td class="py-2 ps-0">{{ $takeCargo->cargo_title }}</td>
                             <td class="py-2">{{ $takeCargo->cargo_time }} Günde ulaşım</td>
-                            <td class="text-body-emphasis fw-semibold text-end py-2 pe-0">@if($setting->free_cargo > $finalPrice)) {{ $takeCargo->cargo_price }} TL @else Ücretsiz @endif</td>
+                            <td class="text-body-emphasis fw-semibold text-end py-2 pe-0">@if($setting->free_cargo > $finalPrice) {{ $takeCargo->cargo_price }} TL @else Ücretsiz @endif</td>
                         </tr>
                     @endforeach
 

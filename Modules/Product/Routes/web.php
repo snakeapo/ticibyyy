@@ -13,6 +13,7 @@ Route::controller(ProductFrontendController::class)->group(function () {
     Route::get('/urun-filtrele', 'product_filter')->name('product_filter');
     Route::get('/markalar', 'all_brand')->name('all_brand');
     Route::get('/marka/{slug}', 'brand_detail')->name('brand_detail');
+    Route::get('koleksiyonlar','collection_index')->name('collection_index');
 });
 
 Route::prefix('spanel')->middleware(['auth', 'admin'])->controller(ProductBackendController::class)->group(function () {

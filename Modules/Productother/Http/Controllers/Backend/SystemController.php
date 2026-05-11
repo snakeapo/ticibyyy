@@ -228,6 +228,7 @@ class SystemController extends Controller
         $variantPrices = $request->input('variant_price', []);
         $variantStocks = $request->input('variant_stock', []);
         $variantImages = $request->file('variant_image', []);
+        $isColors = $request->input('is_color', []);
 
 
         foreach ($variantNames as $key => $variantName) {
@@ -246,6 +247,7 @@ class SystemController extends Controller
             $variant->parent_variant_name = $normalizedParentVariantName ?: null;
             $variant->variant_price = $variantPrices[$key];
             $variant->variant_stock = $variantStocks[$key];
+                $variant->is_color = $isColors[$key] ?? null;
             if (array_key_exists($key, $variantImages) && $variantImages[$key]) {
                 $imageName = time() . '_' . $variantImages[$key]->getClientOriginalName();
                 $variantImages[$key]->move(public_path('upload/product'), $imageName);
@@ -261,6 +263,7 @@ class SystemController extends Controller
     //Product variant update
     public function product_variant_update(ProductVariantUpdateRequest $request,$id)
     {
+
         $formData = $request->validated();
         $formData['parent_variant_name'] = collect(explode(',', (string) ($formData['parent_variant_name'] ?? '')))
             ->map(fn ($name) => trim($name))

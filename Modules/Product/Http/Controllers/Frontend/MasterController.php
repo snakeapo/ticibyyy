@@ -5,6 +5,7 @@ namespace Modules\Product\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Askques;
 use App\Models\Cargos;
+use App\Models\Collections;
 use App\Models\Pasts;
 use App\Models\Brands;
 use App\Models\Productcoms;
@@ -31,6 +32,12 @@ class MasterController extends Controller
     {
         $data = Brands::orderBy('id','desc')->get();
         return view('product::frontend.product.all-brand', compact('data'));
+    }
+
+    public function collection_index()
+    {
+        $data = Collections::orderBy('id','desc')->where('status',1)->paginate(10);
+        return view('product::frontend.product.collection', compact('data'));
     }
 
     // Detail

@@ -40,7 +40,7 @@
                                     <label for="floatingInput">Blog Adı</label>
                                 </div>
                                 <div class="form-floating mb-3">
-                                    <select name="blog_category" class="form-control" id="" required>
+                                    <select name="category_id" class="form-control" id="" required>
                                         @foreach (\App\Models\Blogcats::all() as $key)
                                         <option value="{{ $key->id }}" @selected(old('blog_category') == $key->id)>{{ $key->category_title }}</option>
                                         @endforeach

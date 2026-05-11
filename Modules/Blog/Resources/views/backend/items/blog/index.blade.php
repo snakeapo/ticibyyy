@@ -58,7 +58,7 @@
                                             <td>{{ $key->created_at }}</td>
                                             <td>{{ $key->updated_at }}</td>
                                             <td>{{ $key->blog_title }}</td>
-                                            <td>@if($key->blog_category != 0) {{ $key->getCategory->category_title }} @else <i>Kategori Bulunamadı!</i> @endif</td>
+                                            <td>@if($key->category_id != 0) {{ $key->getCategory->category_title }} @else <i>Kategori Bulunamadı!</i> @endif</td>
                                             <td><a class="btn btn-primary" href="{{ route('blog_edit',$key->id) }}">Düzenle</a></td>
                                             <td>
                                                 <a href="{{ route('blog_delete',$key->id) }}" onclick="confirmation(event)" class="btn btn-danger">Sil</a>

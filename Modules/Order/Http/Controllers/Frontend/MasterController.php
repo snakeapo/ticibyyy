@@ -30,46 +30,77 @@ class MasterController extends Controller
     //Basket Cart POST
     public function cart_insert(Request $request, $product_token)
     {
+        // 🔥 ÜRÜNÜ BUL
+        $find = Products::where('product_token', $product_token)->firstOrFail();
+
+        // 🔥 ÜRÜNDE VARYANT VAR MI?
+        $productVariants = \App\Models\Productvars::where('product_id', $find->id)->exists();
+
         // 🔥 VALIDATION
         $validated = $request->validate([
             'quantity' => ['required', 'integer', 'min:1', 'max:999'],
-            'variants' => ['required', 'array'], // 🔥 YENİ
+
+            // sadece varyantlı ürünlerde zorunlu
+            'variants' => [
+                $productVariants ? 'required' : 'nullable',
+                'array'
+            ],
+
             'coupon' => ['nullable', 'string', 'max:255'],
         ]);
 
         // 🔥 VARIANT ARRAY
         $variants = $request->input('variants', []);
 
-        // boş kontrol (zorunlu seçim)
-        if (in_array(null, $variants, true) || in_array('', $variants, true)) {
-            return back()->with('error', 'Lütfen tüm varyantları seçiniz.');
+        // 🔥 VARYANTLI ÜRÜNDE BOŞ SEÇİM KONTROLÜ
+        if ($productVariants) {
+
+            if (
+                empty($variants) ||
+                in_array(null, $variants, true) ||
+                in_array('', $variants, true)
+            ) {
+                return back()->with('error', 'Lütfen tüm varyantları seçiniz.');
+            }
+
         }
 
         // 🔥 STRING FORMAT (örn: 16-14)
-        $variantString = implode('-', $variants);
-
-        $find = Products::where('product_token', $product_token)->firstOrFail();
-
-        // 🔥 ARTIK TEK VARIANT YOK
-        $variant = null;
+        $variantString = !empty($variants)
+            ? implode('-', $variants)
+            : null;
 
         $basket = Baskets::firstOrCreate(
             ['user_id' => Auth::id()],
             ['basket_token' => date('his') * rand(999, 999999)]
         );
 
-        // 🔥 VARIANT STRING İLE ARA
+        // 🔥 AYNI ÜRÜN + AYNI VARYANT VAR MI?
         $basketQuery = Basketitems::where('product_id', $find->id)
-            ->where('user_id', Auth::id())
-            ->where('variant', $variantString);
+            ->where('user_id', Auth::id());
+
+        // varyantlı/varyantsız kontrol
+        if ($variantString !== null) {
+
+            $basketQuery->where('variant', $variantString);
+
+        } else {
+
+            $basketQuery->whereNull('variant');
+
+        }
 
         $basketFind = $basketQuery->first();
 
         $findCp = null;
 
-        // 🔥 COUPON (DEĞİŞMEDİ)
+        // 🔥 COUPON
         if (!empty($validated['coupon'])) {
-            $findCp = Coupons::whereRaw('UPPER(coupon_code) = ?', [strtoupper(trim($validated['coupon']))])
+
+            $findCp = Coupons::whereRaw(
+                'UPPER(coupon_code) = ?',
+                [strtoupper(trim($validated['coupon']))]
+            )
                 ->where('status', 1)
                 ->where('coupon_quantity', '>=', 1)
                 ->whereIn('coupon_scope', ['product', 'both'])
@@ -84,13 +115,23 @@ class MasterController extends Controller
             }
         }
 
-        DB::transaction(function () use ($basketFind, $validated, $find, $product_token, $variantString, $basket, $findCp) {
+        DB::transaction(function () use (
+            $basketFind,
+            $validated,
+            $find,
+            $product_token,
+            $variantString,
+            $basket,
+            $findCp
+        ) {
 
             $existingQty = $basketFind ? (int) $basketFind->quantity : 0;
+
             $requestedQty = (int) $validated['quantity'];
+
             $targetQty = $existingQty + $requestedQty;
 
-            // 🔥 ŞİMDİLİK STOCK KONTROL PAS GEÇİLDİ (kombinasyon yok)
+            // 🔥 STOCK KONTROL
             // $this->assertStockAvailable(...);
 
             if (!$basketFind) {
@@ -99,7 +140,7 @@ class MasterController extends Controller
                     'user_id' => Auth::id(),
                     'product_id' => $find->id,
                     'product_token' => $product_token,
-                    'variant' => $variantString, // 🔥 ANA NOKTA
+                    'variant' => $variantString,
                     'old_total' => '0',
                     'total' => '0',
                     'quantity' => (string) $validated['quantity'],
@@ -107,20 +148,26 @@ class MasterController extends Controller
                     'basket_no' => $basket->basket_token,
                 ]);
 
+                // 🔥 KUPON ADET DÜŞ
                 if ($findCp) {
                     $findCp->decrement('coupon_quantity');
                 }
 
             } else {
 
-                $basketFind->quantity = (string) (((int) $basketFind->quantity) + ((int) $validated['quantity']));
+                $basketFind->quantity =
+                    (string) (((int) $basketFind->quantity) + ((int) $validated['quantity']));
+
                 $basketFind->save();
             }
 
+            // 🔥 TOTAL HESAPLA
             $this->recalculateBasketItem($basketFind->refresh());
         });
 
-        return redirect()->route('shopping_cart')->with('success', 'Ürün sepete eklendi!');
+        return redirect()
+            ->route('shopping_cart')
+            ->with('success', 'Ürün sepete eklendi!');
     }
     //Cart
     public function shopping_cart()
@@ -325,19 +372,38 @@ class MasterController extends Controller
     //Delete
     public function cart_delete_product($id)
     {
-        $item = Basketitems::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
-        $basket = Baskets::where('basket_token', $item->basket_no)->first();
+        $item = Basketitems::select('id', 'basket_no', 'coupon', 'user_id')
+            ->where('id', $id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        // Coupon release
         $this->releaseItemCoupon($item);
+
+        // Basket çek
+        $basket = Baskets::select('id', 'basket_token', 'coupon_id')
+            ->where('basket_token', $item->basket_no)
+            ->first();
+
+        // Ürünü sil
         $item->delete();
-        if ($basket && Basketitems::where('basket_no', $basket->basket_token)->count() === 0) {
+
+        // Basket boş mu?
+        $hasItems = Basketitems::where('basket_no', $item->basket_no)
+            ->exists();
+
+        if ($basket && !$hasItems) {
+
+            // Basket coupon geri yükle
             if ($basket->coupon_id) {
-                $coupon = Coupons::find($basket->coupon_id);
-                if ($coupon) {
-                    $coupon->increment('coupon_quantity');
-                }
+
+                Coupons::where('id', $basket->coupon_id)
+                    ->increment('coupon_quantity');
             }
+
             $basket->delete();
         }
+
         return back()->with('success', 'Ürün Sepetten Kaldırıldı!');
     }
 
@@ -348,6 +414,7 @@ class MasterController extends Controller
 
     public function order_approval($order_token)
     {
+        $address = Address::where('user_id',Auth::user()->id)->get();
         $data = Orders::where('order_no', $order_token)->where('user_id', Auth::id())->firstOrFail();
         $items = Orderitems::with(['getProduct', 'getVariant'])
             ->where('user_id', Auth::user()->id)
@@ -364,7 +431,7 @@ class MasterController extends Controller
             return redirect()->route('shopping_cart')->with('error', $invalidItemMessage);
         }
 
-        return view('order::frontend.order.order', compact('data', 'items', 'cargos'));
+        return view('order::frontend.order.order', compact('data', 'items', 'cargos','address'));
     }
 
     public function order_post(OrderPostRequest $request,$order_token)

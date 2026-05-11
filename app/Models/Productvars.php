@@ -18,6 +18,7 @@ class Productvars extends Model
         'parent_variant_name',
         'variant_price',
         'variant_stock',
+        'is_color',
     ];
 
     public function product()

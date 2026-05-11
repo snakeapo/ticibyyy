@@ -21,6 +21,7 @@ class ProductVariantUpdateRequest extends FormRequest
             'variant_price' => ['required'],
             'variant_stock' => ['required'],
             'variant_image' => ['sometimes', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
+            'is_color' => ['sometimes'],
         ];
     }
 }

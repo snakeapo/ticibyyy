@@ -16,7 +16,7 @@ class BlogUpdateRequest extends FormRequest
         return [
             'blog_title' => ['required'],
             'blog_desc' => ['required'],
-            'blog_category' => ['required'],
+            'category_id' => ['required'],
             'blog_tag' => ['required'],
             'meta_title' => ['required'],
             'meta_keyw' => ['required'],

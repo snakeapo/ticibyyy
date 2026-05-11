@@ -33,10 +33,7 @@
                     <i class="ci-heart fs-base opacity-75 me-2"></i>
                     Favorilerim
                 </a>
-                <a class="list-group-item list-group-item-action d-flex align-items-center {{ request()->routeIs('favories_page') ? 'pe-none active' : '' }} " href="{{ route('favories_page') }}">
-                    <i class="ci-heart fs-base opacity-75 me-2"></i>
-                    Koleksiyonlarım
-                </a>
+
                 <a class="list-group-item list-group-item-action d-flex align-items-center {{ request()->routeIs('my_coupon') ? 'pe-none active' : '' }} " href="{{ route('my_coupon') }}">
                     <i class="ci-ticket fs-base opacity-75 me-2"></i>
                     İndirim kuponlarım

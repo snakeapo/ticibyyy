@@ -101,7 +101,21 @@
                                                class="form-control">
                                         <label>Stok</label>
                                     </div>
+                                    <div class="form-check mb-3">
 
+                                        <select name="is_color" class="form-control" >
+                                            <option @selected($key->is_color == null) value="" >
+                                                Hayır
+                                            </option>
+
+                                            <option @selected($key->is_color == 1) value="1" >
+                                                Evet
+                                            </option>
+                                        </select>
+                                        <label class="form-check-label" for="">
+                                            Renk varyantı mı?
+                                        </label>
+                                    </div>
                                 </form>
 
                             </div>
@@ -169,7 +183,16 @@
                                     <input type="number" name="variant_stock[]" class="form-control">
                                     <label>Stok</label>
                                 </div>
+                                <div class="form-check mb-3">
 
+                                    <select name="is_color[]" class="form-control" >
+                                        <option value="">Hayır</option>
+                                        <option value="1">Evet</option>
+                                    </select>
+                                    <label class="form-check-label" for="">
+                                        Renk varyantı mı?
+                                    </label>
+                                </div>
                             </div>
                         </div>
 
