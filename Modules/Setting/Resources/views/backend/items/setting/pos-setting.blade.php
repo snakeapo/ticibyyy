@@ -51,6 +51,13 @@
                                         <input type="text" required name="paytr_key" value="{{ $data->paytr_key }}" class="form-control" id="floatingInput" placeholder="">
                                         <label for="floatingInput">Paytr Key</label>
                                     </div>
+                                    <div class="form-floating mb-3">
+                                        <select name="cash_on_delivery_enabled" class="form-select" id="cashOnDeliveryEnabled" required>
+                                            <option value="1" @selected(old('cash_on_delivery_enabled', $data->cash_on_delivery_enabled) == 1)>Evet</option>
+                                            <option value="0" @selected(old('cash_on_delivery_enabled', $data->cash_on_delivery_enabled) == 0)>Hayır</option>
+                                        </select>
+                                        <label for="cashOnDeliveryEnabled">Kapıda ödeme var mı?</label>
+                                    </div>
 
                                     <div class="mb-3">
                                         <button type="submit" class="btn btn-primary w-100">Kaydet</button>

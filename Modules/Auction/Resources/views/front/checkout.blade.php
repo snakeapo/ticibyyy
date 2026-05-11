@@ -86,7 +86,9 @@
                                         <input type="hidden" name="payment_method" value="balance">
                                     @else
                                         <div class="mt-4"><label class="form-check-label w-100 text-dark-emphasis fw-semibold"><input type="radio" class="form-check-input fs-base me-2 me-sm-3" value="bank_transfer" name="payment_method" required @checked(old('payment_method') === 'bank_transfer')> Banka Havale & EFT</label></div>
-                                        <div class="mt-4"><label class="form-check-label w-100 text-dark-emphasis fw-semibold"><input type="radio" class="form-check-input fs-base me-2 me-sm-3" value="cash_on_delivery" name="payment_method" required @checked(old('payment_method') === 'cash_on_delivery')> Kapıda Ödeme</label></div>
+                                        @if($cashOnDeliveryEnabled)
+                                            <div class="mt-4"><label class="form-check-label w-100 text-dark-emphasis fw-semibold"><input type="radio" class="form-check-input fs-base me-2 me-sm-3" value="cash_on_delivery" name="payment_method" required @checked(old('payment_method') === 'cash_on_delivery')> Kapıda Ödeme</label></div>
+                                        @endif
                                     @endif
                                 </div>
 

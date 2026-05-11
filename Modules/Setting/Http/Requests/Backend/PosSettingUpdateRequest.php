@@ -17,6 +17,7 @@ class PosSettingUpdateRequest extends FormRequest
             'paytr_id' => ['required'],
             'paytr_salt' => ['required'],
             'paytr_key' => ['required'],
+            'cash_on_delivery_enabled' => ['required', 'boolean'],
         ];
     }
 }

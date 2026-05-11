@@ -3,8 +3,13 @@
 <main class="main-wrapper">
 <div class="container py-5" id="auctionApp" data-state-url="{{ route('auction_live_state', $auction) }}" data-current-item-id="{{ optional($current)->id }}" data-auction-status="{{ $auction->status }}">
     <h3>{{ $auction->title }}</h3>
+    @php
+        $auctionPaymentText = $cashOnDeliveryEnabled
+            ? 'Bu mezatta teklif için bakiye şartı yoktur. Kazanınca Havale/EFT veya Kapıda Ödeme ile siparişi tamamlayabilirsiniz.'
+            : 'Bu mezatta teklif için bakiye şartı yoktur. Kazanınca Havale/EFT ile siparişi tamamlayabilirsiniz.';
+    @endphp
     <div class="alert {{ $auction->requires_balance ? 'alert-success' : 'alert-warning' }} py-2">
-        {{ $auction->requires_balance ? 'Bu mezatta teklifler bakiye üzerinden alınır. Kazanınca adres ve kargo bilgisiyle siparişi tamamlamanız gerekir.' : 'Bu mezatta teklif için bakiye şartı yoktur. Kazanınca Havale/EFT veya Kapıda Ödeme ile siparişi tamamlayabilirsiniz.' }}
+        {{ $auction->requires_balance ? 'Bu mezatta teklifler bakiye üzerinden alınır. Kazanınca adres ve kargo bilgisiyle siparişi tamamlamanız gerekir.' : $auctionPaymentText }}
     </div>
     @php
         $isBidOpen = $current && $current->status === 'live';
