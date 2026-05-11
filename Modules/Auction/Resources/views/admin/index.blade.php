@@ -11,8 +11,15 @@
         <form method="post" action="{{ route('auction_admin_store') }}" class="card p-3 mb-3">
             @csrf
             <div class="row g-2 align-items-end">
-                <div class="col-md-8"><label>Mezat Başlığı</label><input class="form-control" name="title" required></div>
-                <div class="col-md-4"><button class="btn btn-primary w-100">Mezat Oluştur</button></div>
+                <div class="col-md-6"><label>Mezat Başlığı</label><input class="form-control" name="title" required></div>
+                <div class="col-md-3">
+                    <label>Teklif Şartı</label>
+                    <select class="form-control" name="requires_balance" required>
+                        <option value="1">Bakiyeli mezat</option>
+                        <option value="0">Bakiyesiz mezat</option>
+                    </select>
+                </div>
+                <div class="col-md-3"><button class="btn btn-primary w-100">Mezat Oluştur</button></div>
             </div>
         </form>
 
@@ -25,6 +32,7 @@
                                 <h5 class="mb-0">{{ $auction->title }}</h5>
                                 <div class="d-flex align-items-center gap-2">
                                     <span class="badge bg-secondary text-uppercase">{{ $auction->status }}</span>
+                                    <span class="badge {{ $auction->requires_balance ? 'bg-success' : 'bg-warning text-dark' }}">{{ $auction->requires_balance ? 'Bakiyeli' : 'Bakiyesiz' }}</span>
                                     <span class="badge bg-light text-dark">{{ $auction->items->count() }} ürün</span>
                                 </div>
                             </div>

@@ -9,7 +9,11 @@ class Auction extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title', 'status', 'current_item_id', 'created_by'];
+    protected $fillable = ['title', 'status', 'current_item_id', 'created_by', 'requires_balance'];
+
+    protected $casts = [
+        'requires_balance' => 'boolean',
+    ];
 
     public function items()
     {

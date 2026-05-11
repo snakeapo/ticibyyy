@@ -22,7 +22,12 @@
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h3 class="mb-0">Mezat Sipariş Detayı</h3>
-            <a href="{{ route('auction_live_my_orders') }}" class="axil-btn btn-bg-secondary">Siparişlerime Dön</a>
+            <div class="d-flex gap-2">
+                @if(!$order->isCheckoutCompleted())
+                    <a href="{{ route('auction_live_checkout', $order) }}" class="axil-btn btn-bg-primary">Siparişi Tamamla</a>
+                @endif
+                <a href="{{ route('auction_live_my_orders') }}" class="axil-btn btn-bg-secondary">Siparişlerime Dön</a>
+            </div>
         </div>
 
         <div class="card p-3">
@@ -33,7 +38,10 @@
                 <tr><th>Ürün Tipi</th><td>{{ $order->product_id ? 'Sistemde kayıtlı ürün' : 'Özel mezat ürünü' }}</td></tr>
                 <tr><th>Kazanma Şekli</th><td>{{ $winTypeLabels[$order->win_type] ?? $order->win_type }}</td></tr>
                 <tr><th>Kazanma Teklifi</th><td>{{ number_format($order->final_price, 2) }} TL</td></tr>
-                <tr><th>Adres</th><td>{{ $order->address_snapshot ?: '-' }}</td></tr>
+                <tr><th>Kargo</th><td>{{ optional($order->cargo)->cargo_title ?? '-' }} @if($order->cargo_price) ({{ number_format($order->cargo_price, 2) }} TL) @endif</td></tr>
+                <tr><th>Toplam</th><td>{{ number_format($order->total_amount, 2) }} TL</td></tr>
+                <tr><th>Ödeme</th><td>{{ $order->payment_method ?: '-' }}</td></tr>
+                <tr><th>Adres</th><td>{{ $order->address_snapshot ?: 'Sipariş tamamlama bekleniyor' }}</td></tr>
                 <tr><th>Durum</th><td><span class="badge bg-{{ $statusMeta['class'] }}">{{ $statusMeta['text'] }}</span></td></tr>
                 <tr><th>Tarih</th><td>{{ optional($order->created_at)->format('d.m.Y H:i:s') }}</td></tr>
             </table>

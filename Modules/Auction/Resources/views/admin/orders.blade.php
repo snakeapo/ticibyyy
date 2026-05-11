@@ -30,7 +30,7 @@
                                 <td>{{ optional($order->auction)->title ?? '-' }}</td>
                                 <td>{{ optional(optional($order->item)->product)->title ?? optional($order->item)->custom_title ?? '-' }}</td>
                                 <td>{{ optional($order->user)->name }} {{ optional($order->user)->surname }}</td>
-                                <td>{{ number_format($order->final_price, 2) }} TL</td>
+                                <td>{{ number_format($order->total_amount, 2) }} TL</td>
                                 <td>{{ $order->win_type }}</td>
                                 <td>{{ $order->status }}</td>
                                 <td>{{ optional($order->created_at)->format('d.m.Y H:i') }}</td>
