@@ -10,14 +10,13 @@
                 <div class="col-12">
                     <div class="page-title-head d-flex align-items-center">
                         <div class="flex-grow-1">
-                            <h4 class="page-main-title m-0">Sipariş Listesi</h4>
+                            <h4 class="page-main-title m-0">{{ $currentStatus['label'] }}</h4>
                         </div>
 
                         <div class="text-end">
                             <ol class="breadcrumb m-0 py-0">
-                                <li class="breadcrumb-item"><a href="https://softby.net">Softby</a></li>
                                 <li class="breadcrumb-item"><a href="javascript: void(0);">Kontrol Paneli</a></li>
-                                <li class="breadcrumb-item active">Sipariş Listesi</li>
+                                <li class="breadcrumb-item active">{{ $currentStatus['label'] }}</li>
                             </ol>
                         </div>
                     </div>
@@ -31,7 +30,7 @@
                     <div class="col-lg-12 col-md-12 col-sm-12 col-12">
                         <div class="card">
                             <div class="card-header">
-                                <h4 class="header-title">İptal Edilen Siparişler</h4>
+                                <h4 class="header-title">{{ $currentStatus['label'] }}</h4>
 
                             </div>
                             <div class="card-body">
@@ -60,9 +59,9 @@
                                             <td>{{ number_format($key->total,2) }} TL</td>
 
 
-                                            <td><a href="{{ route('order_detail',$key->id) }}" class="btn btn-primary">Detay</a></td>
-                                            <td><a href="{{ route('invoice',$key->order_no) }}" target="_blank" class="btn btn-pink">Fatura</a></td>
-                                            <td><a href="{{ route('order_delete',$key->id) }}" onclick="confirmation(event)" class="btn btn-danger">Sil</a></td>
+                                            <td><a href="@if($key->user_address != null) {{ route('order_detail',$key->id) }} # @endif " class="btn btn-sm btn-primary">Detay</a></td>
+                                            <td><a href="@if($key->user_address != null) {{ route('invoice',$key->order_no) }} # @endif " target="_blank" class="btn btn-sm btn-warning">Fatura</a></td>
+                                            <td><a href="{{ route('order_delete',$key->id) }}" onclick="confirmation(event)" class="btn btn-sm btn-danger">Sil</a></td>
                                         </tr>
                                         @endforeach
                                     </tbody>

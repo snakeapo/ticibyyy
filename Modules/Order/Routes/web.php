@@ -22,12 +22,7 @@ Route::controller(OrderFrontendController::class)->group(function () {
 });
 
 Route::prefix('spanel')->middleware(['auth', 'admin'])->controller(OrderBackendController::class)->group(function () {
-    Route::get('/pending-order', 'pending_order')->name('pending_order');
-    Route::get('/completed-order', 'completed_order')->name('completed_order');
-    Route::get('/prepared-order', 'prepared_order')->name('prepared_order');
-    Route::get('/shipped-order', 'shipped_order')->name('shipped_order');
-    Route::get('/cancel-order', 'cancel_order')->name('cancel_order');
-    Route::get('/return-order', 'return_order')->name('return_order');
+    Route::get('/order-list/{slug}', 'order_list')->name('order_list');
     Route::get('/live-basket', 'live_basket')->name('live_basket');
     Route::get('/order-detail/{id}', 'order_detail')->name('order_detail');
     Route::post('/order-status/{order_no}', 'order_status')->name('order_status');

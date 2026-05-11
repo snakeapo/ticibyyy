@@ -130,47 +130,42 @@
                 </li>
                 <li class="side-nav-title mt-2" data-lang="custom-pages">Sipariş</li>
                 <li class="side-nav-item">
-                    <a href="{{ route('pending_order') }}" class="side-nav-link">
+                    <a href="{{ route('order_list',['slug'=>'pending']) }}" class="side-nav-link">
                         <span class="menu-icon"><i class="ri ri-group-2-line"></i></span>
                         <span class="menu-text" data-lang="apps-team-board">Bekleyen siparişler</span>
                     </a>
                 </li>
                 <li class="side-nav-item">
-                    <a href="{{ route('completed_order') }}" class="side-nav-link">
+                    <a href="{{ route('order_list',['slug'=>'completed']) }}" class="side-nav-link">
                         <span class="menu-icon"><i class="ri ri-group-2-line"></i></span>
                         <span class="menu-text" data-lang="apps-team-board">Tamamlanan siparişler</span>
                     </a>
                 </li>
                 <li class="side-nav-item">
-                    <a href="{{ route('prepared_order') }}" class="side-nav-link">
+                    <a href="{{ route('order_list',['slug'=>'prepared']) }}" class="side-nav-link">
                         <span class="menu-icon"><i class="ri ri-group-2-line"></i></span>
                         <span class="menu-text" data-lang="apps-team-board">Hazırlanan siparişler</span>
                     </a>
                 </li>
                 <li class="side-nav-item">
-                    <a href="{{ route('shipped_order') }}" class="side-nav-link">
+                    <a href="{{ route('order_list',['slug'=>'shipped']) }}" class="side-nav-link">
                         <span class="menu-icon"><i class="ri ri-group-2-line"></i></span>
                         <span class="menu-text" data-lang="apps-team-board">Kargolanan siparişler</span>
                     </a>
                 </li>
                 <li class="side-nav-item">
-                    <a href="{{ route('cancel_order') }}" class="side-nav-link">
+                    <a href="{{ route('order_list',['slug'=>'cancel']) }}" class="side-nav-link">
                         <span class="menu-icon"><i class="ri ri-group-2-line"></i></span>
                         <span class="menu-text" data-lang="apps-team-board">İptal edilen siparişler</span>
                     </a>
                 </li>
                 <li class="side-nav-item">
-                    <a href="{{ route('cancel_order') }}" class="side-nav-link">
+                    <a href="{{ route('order_list',['slug'=>'return']) }}" class="side-nav-link">
                         <span class="menu-icon"><i class="ri ri-group-2-line"></i></span>
                         <span class="menu-text" data-lang="apps-team-board">İade edilen siparişler</span>
                     </a>
                 </li>
-                <li class="side-nav-item">
-                    <a href="{{ route('pending_order') }}" class="side-nav-link">
-                        <span class="menu-icon"><i class="ri ri-group-2-line"></i></span>
-                        <span class="menu-text" data-lang="apps-team-board">Tüm faturalar</span>
-                    </a>
-                </li>
+
                 <li class="side-nav-item">
                     <a href="{{ route('live_basket') }}" class="side-nav-link">
                         <span class="menu-icon"><i class="ri ri-group-2-line"></i></span>

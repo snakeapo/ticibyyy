@@ -130,7 +130,7 @@
                         </div>
 
                         <!-- All-->
-                        <a href="{{ route('pending_order') }}" class="dropdown-item text-center text-reset text-decoration-underline link-offset-2 fw-bold notify-item border-top border-light py-2">Tümünü gör</a>
+                        <a href="{{ route('order_list',['slug'=>'pending']) }}" class="dropdown-item text-center text-reset text-decoration-underline link-offset-2 fw-bold notify-item border-top border-light py-2">Tümünü gör</a>
                     </div>
                     <!-- End dropdown-menu -->
                 </div>

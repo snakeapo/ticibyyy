@@ -21,10 +21,51 @@ class SystemController extends Controller
 /* ================================================================= */
 
     //Pending
-    public function pending_order()
+    public function order_list($slug)
     {
-        $data = Orders::where('status',0)->get();
-        return view('order::backend.items.order.pending',compact('data'));
+        $statusMap = [
+            'pending' => [
+                'value' => 0,
+                'label' => 'Bekleyen Siparişler',
+            ],
+
+            'completed' => [
+                'value' => 1,
+                'label' => 'Tamamlanan Siparişler',
+            ],
+
+            'prepared' => [
+                'value' => 2,
+                'label' => 'Hazırlanan Siparişler',
+            ],
+
+            'shipped' => [
+                'value' => 3,
+                'label' => 'Kargoya Verilen Siparişler',
+            ],
+
+            'cancel' => [
+                'value' => 4,
+                'label' => 'İptal Edilen Siparişler',
+            ],
+
+            'return' => [
+                'value' => 5,
+                'label' => 'İade Siparişleri',
+            ],
+        ];
+
+        $currentStatus = $statusMap[$slug] ?? [
+            'value' => 0,
+            'label' => 'Siparişler',
+        ];
+
+        $data = Orders::where('status', $currentStatus['value'])->get();
+
+        return view('order::backend.items.order.order', [
+            'data' => $data,
+            'currentStatus' => $currentStatus,
+        ]);
     }
 
     //Complated
