@@ -170,9 +170,7 @@
                                 <div class="border-bottom pb-4 mb-4">
                                     <div class="d-flex align-items-center justify-content-between mb-4">
                                         <h5 class="mb-0">Siparişiniz</h5>
-                                        <div class="nav">
-                                            <a class="nav-link text-decoration-underline p-0" href="{{ route('shopping_cart') }}">Düzenle</a>
-                                        </div>
+
                                     </div>
                                     <div class="d-flex flex-column gap-3">
                                         @foreach ($items as $item)
