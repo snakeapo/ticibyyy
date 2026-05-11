@@ -334,12 +334,19 @@
                             </button>
                         </div>
 
-                        <a href="{{route('product_favories',$data->product_token)}}" class="btn btn-icon btn-lg btn-secondary animate-pulse order-sm-3 order-md-2 order-lg-3" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="tooltip-sm" data-bs-title="Favorilere ekle" aria-label="Add to Wishlist">
-                            @if(\App\Models\Favories::isSave($data->product_token))
-                                <i class="ci-heart text-danger animate-target"></i>
-                            @else
-                                <i class="ci-heart animate-target"></i>
-                            @endif
+                        @php($isSaved = \App\Models\Favories::isSave($data->product_token))
+                        <a href="{{ route('product_favories', $data->product_token) }}"
+                           class="btn btn-icon btn-lg btn-secondary animate-pulse order-sm-3 order-md-2 order-lg-3"
+                           data-favorite-toggle
+                           data-product-token="{{ $data->product_token }}"
+                           data-favorite-saved="{{ $isSaved ? '1' : '0' }}"
+                           data-bs-toggle="tooltip"
+                           data-bs-placement="top"
+                           data-bs-custom-class="tooltip-sm"
+                           data-bs-title="{{ $isSaved ? 'Favorilerden kaldır' : 'Favorilere ekle' }}"
+                           aria-pressed="{{ $isSaved ? 'true' : 'false' }}"
+                           aria-label="{{ $isSaved ? 'Favorilerden kaldır' : 'Favorilere ekle' }}">
+                            <i class="ci-heart {{ $isSaved ? 'text-danger' : '' }} animate-target"></i>
                         </a>
 
                         <button type="submit" class="btn btn-lg btn-primary w-100 animate-slide-end order-sm-2 order-md-4 order-lg-2">

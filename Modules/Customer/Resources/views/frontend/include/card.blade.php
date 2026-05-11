@@ -11,17 +11,21 @@
             $stockPercent = min(($stock / 100) * 100, 100);
         @endphp
 
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-md-3" data-favorite-card data-product-token="{{ $take->getProduct->product_token }}">
             <div class="product-card animate-underline hover-effect-opacity bg-body rounded">
 
                 <div class="position-relative">
 
                     {{-- Wishlist --}}
                     <div class="position-absolute top-0 end-0 z-2 mt-3 me-3">
-                        <form action="{{ route('favories_delete', $take->id) }}" method="POST" onsubmit="return confirm('Bu ürünü favorilerden kaldırmak istediğinize emin misiniz?');">
+                        <form action="{{ route('favories_delete', $take->id) }}"
+                              method="POST"
+                              data-favorite-delete
+                              data-product-token="{{ $take->getProduct->product_token }}"
+                              data-confirm="Bu ürünü favorilerden kaldırmak istediğinize emin misiniz?">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-icon btn-secondary"><i class="ci-trash-empty"></i></button>
+                            <button type="submit" class="btn btn-icon btn-secondary" aria-label="Favorilerden kaldır"><i class="ci-trash-empty"></i></button>
                         </form>
 
                     </div>
