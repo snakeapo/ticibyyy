@@ -290,6 +290,7 @@
                                 </span>
                             @endif
 
+
                         </div>
                         @php
                             $stock = $data->stock;
@@ -355,6 +356,19 @@
                             <i class="ci-shopping-cart fs-lg animate-target ms-n1 me-2"></i>
                             Sepete ekle
                         </button>
+                        @php
+                            $whatsappNumber = preg_replace('/\D+/', '', (string) ($setting->whatsapp ?? ''));
+                            $whatsappMessage = rawurlencode($data->title . ' ürünü için WhatsApp ile sipariş vermek istiyorum. ' . route('product_detail', $data->slug . '-' . $data->product_token));
+                        @endphp
+                        @if((bool) $data->whatsapp_order_enabled && $whatsappNumber)
+                            <a href="https://wa.me/{{ $whatsappNumber }}?text={{ $whatsappMessage }}"
+                               target="_blank"
+                               rel="noopener"
+                               class="btn btn-lg btn-success w-100 animate-slide-end order-sm-4 order-md-5 order-lg-4">
+                                <svg class="animate-target ms-n1 me-2" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.066 7.926c0 1.397.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.928-7.926A7.9 7.9 0 0 0 13.6 2.326zM7.998 14.52a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.499c0-3.627 2.95-6.577 6.584-6.577a6.55 6.55 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.628-2.954 6.579-6.584 6.579z"/><path d="M11.613 9.47c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.473.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg>
+                                WhatsApp ile sipariş ver
+                            </a>
+                        @endif
                     </div>
                         <!-- Features -->
                         <div class="d-flex flex-wrap gap-3 gap-xl-3 pb-2 pb-lg-3 mb-2 mb-lg-0">
@@ -390,6 +404,26 @@
                                     </div>
                                 </div>
 
+                            @endif
+
+                            @if((bool) $data->has_return)
+                                {{-- İADE BİLGİSİ --}}
+                                <div class="d-flex align-items-center fs-sm">
+                                    <svg class="text-success me-2" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 1 1 .908.419A4 4 0 1 0 8 4H5.707l1.147 1.146a.5.5 0 1 1-.708.708l-2-2a.5.5 0 0 1 0-.708l2-2a.5.5 0 1 1 .708.708L5.707 3H8z"/></svg>
+                                    <div class="text-body-emphasis text-nowrap">
+                                        <span class="fw-semibold text-success">İade</span> var
+                                    </div>
+                                </div>
+                            @endif
+
+                            @if((bool) $data->has_exchange)
+                                {{-- DEĞİŞİM BİLGİSİ --}}
+                                <div class="d-flex align-items-center fs-sm">
+                                    <svg class="text-info me-2" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M2.146 6.854a.5.5 0 0 0 .708 0L4 5.707V11.5A2.5 2.5 0 0 0 6.5 14h1a.5.5 0 0 0 0-1h-1A1.5 1.5 0 0 1 5 11.5V5.707l1.146 1.147a.5.5 0 1 0 .708-.708l-2-2a.5.5 0 0 0-.708 0l-2 2a.5.5 0 0 0 0 .708zM13.854 9.146a.5.5 0 0 0-.708 0L12 10.293V4.5A2.5 2.5 0 0 0 9.5 2h-1a.5.5 0 0 0 0 1h1A1.5 1.5 0 0 1 11 4.5v5.793L9.854 9.146a.5.5 0 0 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0 0-.708z"/></svg>
+                                    <div class="text-body-emphasis text-nowrap">
+                                        <span class="fw-semibold text-info">Değişim</span> var
+                                    </div>
+                                </div>
                             @endif
 
                         </div>
