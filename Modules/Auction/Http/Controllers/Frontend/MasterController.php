@@ -66,9 +66,11 @@ class MasterController extends Controller
             $cargos = Cargos::orderBy('id')->get();
         }
 
-        $cashOnDeliveryEnabled = (bool) optional(Settings::find(1))->cash_on_delivery_enabled;
+        $settings = Settings::find(1);
+        $cashOnDeliveryEnabled = (bool) optional($settings)->cash_on_delivery_enabled;
+        $freeCargoLimit = (float) (optional($settings)->free_cargo ?? 0);
 
-        return view('auction::front.checkout', compact('order', 'address', 'cargos', 'cashOnDeliveryEnabled'));
+        return view('auction::front.checkout', compact('order', 'address', 'cargos', 'cashOnDeliveryEnabled', 'freeCargoLimit'));
     }
 
     public function completeCheckout(Request $request, AuctionOrder $order)
@@ -110,10 +112,14 @@ class MasterController extends Controller
         }
 
         $cargo = Cargos::findOrFail($validated['cargo']);
+        $freeCargoLimit = (float) (optional(Settings::find(1))->free_cargo ?? 0);
+        $orderSubtotal = (float) $order->final_price;
+        $cargoPrice = $freeCargoLimit > 0 && $orderSubtotal >= $freeCargoLimit ? 0 : (float) $cargo->cargo_price;
+
         $order->update([
             'address_snapshot' => trim(($selectedAddress->city ?? '') . ' / ' . ($selectedAddress->town ?? '') . ' - ' . ($selectedAddress->address ?? '')),
             'cargo_id' => $cargo->id,
-            'cargo_price' => (float) $cargo->cargo_price,
+            'cargo_price' => $cargoPrice,
             'payment_method' => $order->auction && $order->auction->requires_balance ? 'balance' : $validated['payment_method'],
             'checkout_completed_at' => now(),
             'status' => 'processing',

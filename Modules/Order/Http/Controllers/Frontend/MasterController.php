@@ -421,6 +421,7 @@ class MasterController extends Controller
             ->where('order_token', $data->order_no)
             ->get();
         $cargos = Cargos::where('status', 1)->orderBy('id')->get();
+        $freeCargoLimit = (float) (optional(Settings::find(1))->free_cargo ?? 0);
 
         if ($cargos->isEmpty()) {
             $cargos = Cargos::orderBy('id')->get();
@@ -431,7 +432,7 @@ class MasterController extends Controller
             return redirect()->route('shopping_cart')->with('error', $invalidItemMessage);
         }
 
-        return view('order::frontend.order.order', compact('data', 'items', 'cargos','address'));
+        return view('order::frontend.order.order', compact('data', 'items', 'cargos','address', 'freeCargoLimit'));
     }
 
     public function order_post(OrderPostRequest $request,$order_token)
@@ -483,7 +484,10 @@ class MasterController extends Controller
         }
 
         $findCargo = Cargos::where('id',$request->cargo)->firstOrFail();
-        $toplamTutar = $findOrder->total+$findCargo->cargo_price;
+        $freeCargoLimit = (float) (optional(Settings::find(1))->free_cargo ?? 0);
+        $orderSubtotal = (float) $findOrder->total;
+        $cargoPrice = $freeCargoLimit > 0 && $orderSubtotal >= $freeCargoLimit ? 0 : (float) $findCargo->cargo_price;
+        $toplamTutar = $orderSubtotal + $cargoPrice;
 
         $updateForm['total'] = $toplamTutar;
         $updateForm['user_address'] = $selectedAddress->id;

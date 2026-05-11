@@ -10,6 +10,8 @@
         $image = optional($item)->custom_image ?: optional(collect(optional($item)->custom_images ?? [])->filter()->values())->first() ?: optional($product)->image;
         $imagePath = $image ? asset('/upload/product/' . ltrim($image, '/')) : 'https://placehold.co/600x450?text=Urun';
         $requiresBalance = (bool) optional($order->auction)->requires_balance;
+        $freeCargoLimit = (float) ($freeCargoLimit ?? optional($setting)->free_cargo ?? 0);
+        $hasFreeCargo = $freeCargoLimit > 0 && (float) $order->final_price >= $freeCargoLimit;
     @endphp
 
     <div class="container py-5">
@@ -97,8 +99,8 @@
                                     @forelse ($cargos as $cargo)
                                         <div class="mt-4">
                                             <label class="form-check-label d-flex align-items-center justify-content-between gap-3 text-dark-emphasis fw-semibold">
-                                                <span><input type="radio" class="form-check-input fs-base me-2 me-sm-3" value="{{ $cargo->id }}" name="cargo" data-price="{{ $cargo->cargo_price }}" required @checked(old('cargo') == $cargo->id)> {{ $cargo->cargo_title }}</span>
-                                                <span class="text-body-secondary">{{ number_format($cargo->cargo_price, 2) }} TL</span>
+                                                <span><input type="radio" class="form-check-input fs-base me-2 me-sm-3" value="{{ $cargo->id }}" name="cargo" data-price="{{ $hasFreeCargo ? 0 : $cargo->cargo_price }}" required @checked(old('cargo') == $cargo->id)> {{ $cargo->cargo_title }}</span>
+                                                <span class="text-body-secondary">{{ $hasFreeCargo ? 'Ücretsiz' : number_format($cargo->cargo_price, 2) . ' TL' }}</span>
                                             </label>
                                         </div>
                                     @empty
@@ -156,6 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const cargoRadios = document.querySelectorAll('input[name="cargo"]');
     const totalNode = document.querySelector('.order-total-amount');
     const cargoAmountNode = document.getElementById('selected-cargo-amount');
+    const hasFreeCargo = @json($hasFreeCargo);
     const formatter = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     function toggleNewAddress(show) {
@@ -186,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!totalNode) return;
         const baseTotal = Number.parseFloat(totalNode.dataset.baseTotal || '0');
         const cargoPrice = Number.parseFloat(selectedCargo?.dataset.price || '0');
-        const safeCargoPrice = Number.isFinite(cargoPrice) ? cargoPrice : 0;
+        const safeCargoPrice = hasFreeCargo ? 0 : (Number.isFinite(cargoPrice) ? cargoPrice : 0);
         totalNode.textContent = `${formatter.format(baseTotal + safeCargoPrice)} TL`;
         if (cargoAmountNode) cargoAmountNode.textContent = `${formatter.format(safeCargoPrice)} TL`;
     }
