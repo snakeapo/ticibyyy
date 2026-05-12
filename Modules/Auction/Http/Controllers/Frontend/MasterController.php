@@ -12,6 +12,7 @@ use App\Models\Cargos;
 use App\Models\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -133,95 +134,101 @@ class MasterController extends Controller
         $request->validate(['amount' => 'required|numeric|min:0.01']);
         $item->loadMissing('auction');
         $requiresBalance = (bool) optional($item->auction)->requires_balance;
+        $user = Auth::user();
 
         if ($item->status !== 'live') {
-            return back()->with('error', 'Bu ürün için mezat kapalı.');
+            return $this->bidResponse($request, false, 'Bu ürün için mezat kapalı.', $item);
         }
 
-        $user = Auth::user();
+        $lock = Cache::lock('auction-bid:' . $item->id . ':' . $user->id, 10);
+        if (! $lock->get()) {
+            return $this->bidResponse($request, false, 'Önceki teklifiniz işleniyor. Lütfen bekleyin.', $item, 429);
+        }
 
         try {
             DB::transaction(function () use ($item, $user, $request, $requiresBalance) {
-                $item = AuctionItem::lockForUpdate()->findOrFail($item->id);
+                $item = AuctionItem::with('auction')->lockForUpdate()->findOrFail($item->id);
                 if ($item->status !== 'live') {
                     throw ValidationException::withMessages(['amount' => 'Bu ürün için mezat kapalı.']);
                 }
-            $highest = $item->bids()->where('status', 'active')->orderByDesc('amount')->first();
-            $min = $highest ? ((float) $highest->amount + (float) $item->min_increment) : ((float) $item->start_price + (float) $item->min_increment);
-            $amount = (float) $request->amount;
 
-            if ($amount < $min) {
-                throw ValidationException::withMessages(['amount' => 'Teklifiniz geç kaldı. Güncel minimum teklif: ' . number_format($min, 2)]);
-            }
-            if ($amount > (float) $item->buy_now_price) {
-                throw ValidationException::withMessages(['amount' => 'Teklif, hemen al fiyatını geçemez.']);
-            }
+                $highest = $item->bids()->where('status', 'active')->orderByDesc('amount')->lockForUpdate()->first();
+                $min = $highest ? ((float) $highest->amount + (float) $item->min_increment) : ((float) $item->start_price + (float) $item->min_increment);
+                $amount = (float) $request->amount;
 
-            $myActiveBids = $item->bids()
-                ->where('status', 'active')
-                ->where('user_id', $user->id)
-                ->lockForUpdate()
-                ->get();
+                if ($amount < $min) {
+                    throw ValidationException::withMessages(['amount' => 'Teklifiniz geç kaldı. Güncel minimum teklif: ' . number_format($min, 2)]);
+                }
+                if ($amount > (float) $item->buy_now_price) {
+                    throw ValidationException::withMessages(['amount' => 'Teklif, hemen al fiyatını geçemez.']);
+                }
 
-            $refundAmount = (float) $myActiveBids->sum('amount');
-            if ($requiresBalance && ((float) $user->balance + $refundAmount) < $amount) {
-                throw ValidationException::withMessages(['amount' => 'Yetersiz bakiye.']);
-            }
+                $myActiveBids = $item->bids()
+                    ->where('status', 'active')
+                    ->where('user_id', $user->id)
+                    ->lockForUpdate()
+                    ->get();
 
-            if ($myActiveBids->isNotEmpty()) {
+                $refundAmount = (float) $myActiveBids->sum('amount');
+                if ($requiresBalance && ((float) $user->balance + $refundAmount) < $amount) {
+                    throw ValidationException::withMessages(['amount' => 'Yetersiz bakiye.']);
+                }
+
+                if ($myActiveBids->isNotEmpty()) {
+                    if ($requiresBalance) {
+                        $user->balance = (float) $user->balance + $refundAmount;
+                    }
+                    $myActiveBids->each->update(['status' => 'outbid_refunded']);
+                }
+
+                if ($highest && (int) $highest->user_id !== (int) $user->id) {
+                    $prevUser = $highest->user()->lockForUpdate()->first();
+                    if ($requiresBalance) {
+                        $prevUser->balance = (float) $prevUser->balance + (float) $highest->amount;
+                        $prevUser->save();
+                    }
+                    $highest->update(['status' => 'outbid_refunded']);
+                }
+
                 if ($requiresBalance) {
-                    $user->balance = (float) $user->balance + $refundAmount;
+                    $user->balance = (float) $user->balance - $amount;
+                    if ($user->balance < 0) {
+                        throw ValidationException::withMessages(['amount' => 'Bakiye eksiye düşemez.']);
+                    }
+                    $user->save();
                 }
-                $myActiveBids->each->update(['status' => 'outbid_refunded']);
-            }
 
-            if ($highest && (int) $highest->user_id !== (int) $user->id) {
-                $prevUser = $highest->user()->lockForUpdate()->first();
-                if ($requiresBalance) {
-                    $prevUser->balance = (float) $prevUser->balance + (float) $highest->amount;
-                    $prevUser->save();
-                }
-                $highest->update(['status' => 'outbid_refunded']);
-            }
-
-
-            if ($requiresBalance) {
-                $user->balance = (float) $user->balance - $amount;
-                if ($user->balance < 0) {
-                    throw ValidationException::withMessages(['amount' => 'Bakiye eksiye düşemez.']);
-                }
-                $user->save();
-            }
-
-            AuctionBid::create([
-                'auction_item_id' => $item->id,
-                'user_id' => $user->id,
-                'amount' => $amount,
-                'status' => $amount >= (float) $item->buy_now_price ? 'winner' : 'active',
-            ]);
-
-            if ($amount >= (float) $item->buy_now_price) {
-                $item->update([
-                    'status' => 'sold',
-                    'winner_user_id' => $user->id,
-                    'winning_bid' => $amount,
-                    'last_bid_at' => now(),
-                    'ended_at' => now(),
+                AuctionBid::create([
+                    'auction_item_id' => $item->id,
+                    'user_id' => $user->id,
+                    'amount' => $amount,
+                    'status' => $amount >= (float) $item->buy_now_price ? 'winner' : 'active',
                 ]);
-                if ($item->auction && (int) $item->auction->current_item_id === (int) $item->id) {
-                    $item->auction->update(['current_item_id' => null]);
-                }
-                $this->createAuctionOrder($item, $user->id, $amount, 'auto_buy_now');
-                return;
-            }
 
-            $item->update(['last_bid_at' => now()]);
+                if ($amount >= (float) $item->buy_now_price) {
+                    $item->update([
+                        'status' => 'sold',
+                        'winner_user_id' => $user->id,
+                        'winning_bid' => $amount,
+                        'last_bid_at' => now(),
+                        'ended_at' => now(),
+                    ]);
+                    if ($item->auction && (int) $item->auction->current_item_id === (int) $item->id) {
+                        $item->auction->update(['current_item_id' => null]);
+                    }
+                    $this->createAuctionOrder($item, $user->id, $amount, 'auto_buy_now');
+                    return;
+                }
+
+                $item->update(['last_bid_at' => now()]);
             });
         } catch (ValidationException $e) {
-            return back()->with('error', collect($e->errors())->flatten()->first())->withInput();
+            return $this->bidResponse($request, false, collect($e->errors())->flatten()->first(), $item, 422);
+        } finally {
+            optional($lock)->release();
         }
 
-        return back()->with('success', 'Teklifiniz alındı.');
+        return $this->bidResponse($request, true, 'Teklifiniz alındı.', $item);
     }
 
     public function buyNow(AuctionItem $item)
@@ -292,6 +299,32 @@ class MasterController extends Controller
 
     public function state(Auction $auction)
     {
+        return response()->json($this->auctionStatePayload($auction));
+    }
+
+
+    private function bidResponse(Request $request, bool $ok, string $message, AuctionItem $item, int $status = 200)
+    {
+        if ($request->expectsJson() || $request->ajax()) {
+            $auction = Auction::find($item->auction_id);
+
+            return response()->json([
+                'ok' => $ok,
+                'message' => $message,
+                'state' => $auction ? $this->auctionStatePayload($auction) : null,
+            ], $ok ? 200 : $status);
+        }
+
+        $redirect = back();
+        if (! $ok) {
+            $redirect = $redirect->withInput();
+        }
+
+        return $redirect->with($ok ? 'success' : 'error', $message);
+    }
+
+    private function auctionStatePayload(Auction $auction): array
+    {
         $auction->load(['items.product', 'currentItem.product']);
         $current = $auction->currentItem;
         if ($current && $current->status === 'live') {
@@ -300,10 +333,16 @@ class MasterController extends Controller
             $auction->load(['items.product', 'currentItem.product']);
             $current = $auction->currentItem;
         }
+
         $bids = $current ? AuctionBid::with('user:id,name,surname')->where('auction_item_id', $current->id)->latest()->take(30)->get() : [];
-        $highest = $current ? $current->bids()->orderByDesc('amount')->first() : null;
+        $highest = $current ? $current->bids()->whereIn('status', ['active', 'winner'])->orderByDesc('amount')->first() : null;
         $openingBid = $current ? ((float) $current->start_price + (float) $current->min_increment) : null;
         $nextMinBid = $current ? ($highest ? ((float) $highest->amount + (float) $current->min_increment) : $openingBid) : null;
+
+        if ($current) {
+            $current->setAttribute('display_title', $current->custom_title ?: optional($current->product)->title);
+            $current->setAttribute('display_description', $current->custom_description ?: optional($current->product)->description);
+        }
 
         $checkoutRedirectUrl = null;
         if (Auth::check()) {
@@ -315,7 +354,7 @@ class MasterController extends Controller
             $checkoutRedirectUrl = $checkoutOrder ? route('auction_live_checkout', $checkoutOrder) : null;
         }
 
-        return response()->json([
+        return [
             'auction' => $auction,
             'current' => $current,
             'bids' => $bids,
@@ -324,7 +363,7 @@ class MasterController extends Controller
             'remainingSeconds' => $current ? $this->remainingSeconds($current) : null,
             'authBalance' => Auth::check() ? number_format((float) Auth::user()->balance, 2, '.', '') : null,
             'checkoutRedirectUrl' => $checkoutRedirectUrl,
-        ]);
+        ];
     }
 
     private function createAuctionOrder(AuctionItem $item, int $userId, float $amount, string $winType): void
