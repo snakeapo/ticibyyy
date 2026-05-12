@@ -353,17 +353,17 @@
                                 <div class="card-body">
                                     <div class="mb-3">
                                         <label class="mb-2">Ürün Özellikleri</label>
-                                        <textarea name="feature" id="feature" rows="10" cols="80">{{ old('feature') }}</textarea>
+                                        <textarea name="feature" class="form-control" id="feature" rows="10" cols="80">{{ old('feature') }}</textarea>
                                     </div>
 
                                     <div class="mb-3">
                                         <label class="mb-2">Taksitlendirme Bilgisi</label>
-                                        <textarea name="installment" id="taksit" rows="10" cols="80">{{ old('installment') }}</textarea>
+                                        <textarea name="installment" class="form-control" id="taksit" rows="10" cols="80">{{ old('installment') }}</textarea>
                                     </div>
 
                                     <div class="mb-3">
                                         <label class="mb-2">Ürün Açıklaması</label>
-                                        <textarea name="description"  id="desc" rows="10" cols="80">{{ old('description') }}</textarea>
+                                        <textarea name="description"  class="form-control" id="desc" rows="10" cols="80">{{ old('description') }}</textarea>
                                     </div>
                                 </div>
                             </div>

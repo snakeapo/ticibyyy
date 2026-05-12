@@ -35,6 +35,11 @@ class Orders extends Model
         return $this->hasOne('App\Models\Cargos','id','cargo');
     }
 
+    public function getAddress()
+    {
+        return $this->hasOne('App\Models\Address','id','user_address');
+    }
+
     public function items()
     {
         return $this->hasMany(Orderitems::class, 'order_token', 'order_no');

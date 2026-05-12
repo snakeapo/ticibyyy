@@ -155,9 +155,9 @@
                                         </div>
                                         <div class="card-body">
 
-                                            <textarea name="feature" id="feature">{{ $data->feature }}</textarea>
-                                            <textarea name="installment" id="taksit">{{ $data->installment }}</textarea>
-                                            <textarea name="description" id="desc">{{ $data->description }}</textarea>
+                                            <textarea name="feature" class="form-control" id="feature">{{ $data->feature }}</textarea>
+                                            <textarea name="installment" class="form-control" id="taksit">{{ $data->installment }}</textarea>
+                                            <textarea name="description" class="form-control" id="desc">{{ $data->description }}</textarea>
 
                                         </div>
                                     </div>

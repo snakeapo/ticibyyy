@@ -30,15 +30,13 @@
 
                 <div class="row">
                     <div class="col-lg-8 col-md-8 col-sm-12 col-12">
-                        <div class="alert alert-warning" role="alert">
-                            <i class="ri-alert-line me-1 align-middle fs-16"></i>
-                            <strong>! UYARI !</strong> Eğer Tablonun Devamı Görünmüyorsa #İlk Sırada ki Numaradan Açabilirsiniz Devamını.
-                        </div>
+
                         <div class="card">
                             <div class="card-header">
                                 <h4 class="header-title">Banka Ayarları</h4>
                             </div>
                             <div class="card-body">
+                                <div class="table-responsive">
                                 <table id="basic-datatable" class="table table-striped dt-responsive nowrap w-100">
                                     <thead>
 
@@ -48,7 +46,7 @@
                                             <th>Güncelleme Tarihi</th>
                                             <th>Banka Adı</th>
                                             <th>İban No</th>
-                                            <th>Hesap No</th>
+                                            <th>Ad Soyad</th>
                                             <th>Durum</th>
                                             <th>Düzenle</th>
                                             <th>Sil</th>
@@ -97,7 +95,7 @@
                                                         </div>
                                                         <div class="form-floating mb-3">
                                                             <input type="text" required name="account" value="{{ $key->account }}" class="form-control" id="floatingInput" placeholder="">
-                                                            <label for="floatingInput">Hesap Numarası</label>
+                                                            <label for="floatingInput">Ad Soyad</label>
                                                         </div>
                                                         <div class="form-floating mb-3">
                                                             <select class="form-select" required name="status" id="floatingSelect" aria-label="">
@@ -118,7 +116,7 @@
                                         @endforeach
                                     </tbody>
                                 </table>
-
+                                </div> <!-- end card body-->
                             </div> <!-- end card body-->
                         </div> <!-- end card -->
                     </div><!-- end col-->
@@ -140,7 +138,7 @@
                                     </div>
                                     <div class="form-floating mb-3">
                                         <input type="text" required name="account" class="form-control" id="floatingInput" placeholder="">
-                                        <label for="floatingInput">Hesap Numarası</label>
+                                        <label for="floatingInput">Ad Soyad</label>
                                     </div>
                                     <div class="form-floating mb-3">
                                         <select class="form-select" required name="status" id="floatingSelect" aria-label="">

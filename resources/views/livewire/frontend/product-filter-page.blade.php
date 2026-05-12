@@ -140,7 +140,10 @@
                 <div class="fs-sm">
                     {{ $products->total() }} ürün bulundu
                 </div>
-
+                <button type="button" class="btn btn-sm btn-secondary border-0 border-top border-light border-opacity-10 rounded d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#filterSidebar" aria-controls="filterSidebar" data-bs-theme="light">
+                    <i class="ci-filter fs-base me-2"></i>
+                    Filtre
+                </button>
                 <select class="form-select w-auto" wire:model.live="sortBy">
                     <option value="none">Varsayılan</option>
                     <option value="a_z">A-Z</option>

@@ -66,9 +66,11 @@
             <div class="row">
                 <div class="col-md-4 d-sm-flex flex-md-column align-items-center align-items-md-start pb-3 mb-sm-4">
                     <h4 class="mb-sm-0 mb-md-4 me-4">
-                        <a class="text-dark-emphasis text-decoration-none" href="index.html">Cartzilla</a>
+                        <a class="text-dark-emphasis text-decoration-none" href="{{ route('home_index') }}">
+                            <img src="{{ asset('upload/setting/'.$setting->light_logo) }}" width="150" alt="">
+                        </a>
                     </h4>
-                    <p class="text-body fs-sm text-sm-end text-md-start mb-sm-0 mb-md-3 ms-0 ms-sm-auto ms-md-0 me-4">Got questions? Contact us 24/7</p>
+                    <p class="text-body fs-sm text-sm-end text-md-start mb-sm-0 mb-md-3 ms-0 ms-sm-auto ms-md-0 me-4">{{ $setting->footer_desc }}</p>
 
                 </div>
                 <div class="col-md-8">
@@ -76,24 +78,24 @@
                         <div class="accordion-item col border-0">
                             <h6 class="accordion-header" id="companyHeading">
                                 <span class="text-dark-emphasis d-none d-sm-block">Kurumsal</span>
-                                <button type="button" class="accordion-button collapsed py-3 d-sm-none" data-bs-toggle="collapse" data-bs-target="#companyLinks" aria-expanded="false" aria-controls="companyLinks">Company</button>
+                                <button type="button" class="accordion-button collapsed py-3 d-sm-none" data-bs-toggle="collapse" data-bs-target="#companyLinks" aria-expanded="false" aria-controls="companyLinks">Kurumsal</button>
                             </h6>
                             <div class="accordion-collapse collapse d-sm-block" id="companyLinks" aria-labelledby="companyHeading" data-bs-parent="#footerLinks">
                                 <ul class="nav flex-column gap-2 pt-sm-3 pb-3 mt-n1 mb-1">
                                     <li class="d-flex w-100 pt-1">
-                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="#!">About company</a>
+                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="{{ route('page_detail',['page_slug'=>'hakkimizda']) }}">Hakkımızda</a>
                                     </li>
                                     <li class="d-flex w-100 pt-1">
-                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="#!">Our team</a>
+                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="{{ route('page_detail',['page_slug'=>'gizlilik-politikasi']) }}">Gizlilik politikası</a>
                                     </li>
                                     <li class="d-flex w-100 pt-1">
-                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="#!">Careers</a>
+                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="{{ route('page_detail',['page_slug'=>'kullanim-kosullari']) }}">Kullanım koşulları</a>
                                     </li>
                                     <li class="d-flex w-100 pt-1">
-                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="#!">Contact us</a>
+                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="{{ route('page_detail',['page_slug'=>'mesafeli-satis-sozlesmesi']) }}">Mesafeli satış sözleşmesi</a>
                                     </li>
                                     <li class="d-flex w-100 pt-1">
-                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="#!">News</a>
+                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="{{ route('contact_page') }}">İletişim</a>
                                     </li>
                                 </ul>
                             </div>
@@ -102,27 +104,27 @@
                         <div class="accordion-item col border-0">
                             <h6 class="accordion-header" id="accountHeading">
                                 <span class="text-dark-emphasis d-none d-sm-block">Hesap</span>
-                                <button type="button" class="accordion-button collapsed py-3 d-sm-none" data-bs-toggle="collapse" data-bs-target="#accountLinks" aria-expanded="false" aria-controls="accountLinks">Account</button>
+                                <button type="button" class="accordion-button collapsed py-3 d-sm-none" data-bs-toggle="collapse" data-bs-target="#accountLinks" aria-expanded="false" aria-controls="accountLinks">Hesap</button>
                             </h6>
                             <div class="accordion-collapse collapse d-sm-block" id="accountLinks" aria-labelledby="accountHeading" data-bs-parent="#footerLinks">
                                 <ul class="nav flex-column gap-2 pt-sm-3 pb-3 mt-n1 mb-1">
                                     <li class="d-flex w-100 pt-1">
-                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="#!">Your account</a>
+                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="{{ route('user_panel') }}">Hesabım</a>
                                     </li>
                                     <li class="d-flex w-100 pt-1">
-                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="#!">Shipping rates &amp; policies</a>
+                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="{{ route('favories_page') }}">Favorilerim</a>
                                     </li>
                                     <li class="d-flex w-100 pt-1">
-                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="#!">Refunds &amp; replacements</a>
+                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="{{ route('my_order') }}">Siparişlerim</a>
                                     </li>
                                     <li class="d-flex w-100 pt-1">
-                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="#!">Delivery info</a>
+                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="{{ route('notice_setting') }}">Bildirimlerim</a>
                                     </li>
                                     <li class="d-flex w-100 pt-1">
-                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="#!">Order tracking</a>
+                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="{{ route('my_coupon') }}">İndirim kuponlarım</a>
                                     </li>
                                     <li class="d-flex w-100 pt-1">
-                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="#!">Taxes &amp; fees</a>
+                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="{{ route('my_address') }}">Adreslerim</a>
                                     </li>
                                 </ul>
                             </div>
@@ -131,27 +133,27 @@
                         <div class="accordion-item col border-0">
                             <h6 class="accordion-header" id="customerHeading">
                                 <span class="text-dark-emphasis d-none d-sm-block">Müşteri</span>
-                                <button type="button" class="accordion-button collapsed py-3 d-sm-none" data-bs-toggle="collapse" data-bs-target="#customerLinks" aria-expanded="false" aria-controls="customerLinks">Customer service</button>
+                                <button type="button" class="accordion-button collapsed py-3 d-sm-none" data-bs-toggle="collapse" data-bs-target="#customerLinks" aria-expanded="false" aria-controls="customerLinks">Müşteri</button>
                             </h6>
                             <div class="accordion-collapse collapse d-sm-block" id="customerLinks" aria-labelledby="customerHeading" data-bs-parent="#footerLinks">
                                 <ul class="nav flex-column gap-2 pt-sm-3 pb-3 mt-n1 mb-1">
                                     <li class="d-flex w-100 pt-1">
-                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="#!">Payment methods</a>
+                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="{{ route('blog_page') }}">Blog</a>
                                     </li>
                                     <li class="d-flex w-100 pt-1">
-                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="#!">Money back guarantee</a>
+                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="{{ route('product_filter') }}">Ürünler</a>
                                     </li>
                                     <li class="d-flex w-100 pt-1">
-                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="#!">Product returns</a>
+                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="{{ route('collection_index') }}">Koleksiyonlar</a>
                                     </li>
                                     <li class="d-flex w-100 pt-1">
-                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="#!">Support center</a>
+                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="{{ route('my_comment') }}">Değerlendirmelerim</a>
                                     </li>
                                     <li class="d-flex w-100 pt-1">
-                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="#!">Shipping</a>
+                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="{{ route('login') }}">Giriş yap</a>
                                     </li>
                                     <li class="d-flex w-100 pt-1">
-                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="#!">Terms &amp; conditions</a>
+                                        <a class="nav-link animate-underline animate-target d-inline fw-normal text-truncate p-0" href="{{ route('register') }}">Kayıt ol</a>
                                     </li>
                                 </ul>
                             </div>
@@ -193,9 +195,7 @@
                 <div>
                     <img src="{{ asset('frontend/assets/img/payment-methods/mastercard.svg') }}" alt="Mastercard">
                 </div>
-                <div>
-                    <img src="{{ asset('frontend/assets/img/payment-methods/paypal-dark-mode.svg') }}" alt="PayPal">
-                </div>
+
 
             </div>
             <p class="text-body fs-xs text-center text-md-start mb-0 me-4 order-md-1">&copy; {{ date('Y') }} {{ $setting->footer }} Powered by <span class="animate-underline"><a class="animate-target text-dark-emphasis fw-medium text-decoration-none" href="https://ticiby.com/" target="_blank" rel="noreferrer">Ticiby</a></span></p>

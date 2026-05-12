@@ -63,10 +63,16 @@
                                             <td><a class="btn btn-primary" href="{{ route('page_edit',$key->id) }}">Düzenle</a></td>
 
                                             <td>
-                                                @if($key->id == 1)
-                                                <button type="button" class="btn btn-secondary" disabled><i class="ri-key-2-line"></i></button>
+                                                @if(in_array($key->id, [1, 2, 3, 4]))
+                                                    <button type="button" class="btn btn-secondary" disabled>
+                                                        <i class="ri-key-2-line"></i>
+                                                    </button>
                                                 @else
-                                                <a href="{{ route('page_delete',$key->id) }}" onclick="confirmation(event)" class="btn btn-danger">Sil</a>
+                                                    <a href="{{ route('page_delete', $key->id) }}"
+                                                       onclick="confirmation(event)"
+                                                       class="btn btn-danger">
+                                                        Sil
+                                                    </a>
                                                 @endif
                                             </td>
                                         </tr>

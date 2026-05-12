@@ -36,13 +36,28 @@
                             </div>
                             <div class="card-body">
                                 <div class="form-floating mb-3">
-                                    <input type="text" required name="page_title" value="{{ $data->page_title }}" class="form-control" id="floatingInput" placeholder="">
-                                    <label for="floatingInput">Sayfa Adı</label>
+                                    <input
+                                        type="text"
+                                        name="page_title"
+                                        value="{{ $data->page_title }}"
+                                        class="form-control"
+                                        id="floatingInput"
+                                        placeholder=""
+                                        @if(in_array($data->id, [1,2,3,4])) disabled @else required @endif
+                                    >
+
+                                    <label for="floatingInput">
+                                        Sayfa Adı
+
+                                        @if(in_array($data->id, [1,2,3,4]))
+                                            🔒
+                                        @endif
+                                    </label>
                                 </div>
 
                                 <div class="mb-3">
                                 <label class="mb-2">Sayfa Açıklaması</label>
-                                <textarea name="page_desc" required id="desc" rows="10" cols="80">{{ $data->page_desc }}</textarea>
+                                <textarea name="page_desc" class="form-control" required id="desc" rows="10" cols="80">{{ $data->page_desc }}</textarea>
                             </div>
                             </div> <!-- end card body-->
                         </div> <!-- end card -->

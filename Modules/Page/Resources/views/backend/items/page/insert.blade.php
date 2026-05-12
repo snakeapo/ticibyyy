@@ -42,7 +42,7 @@
 
                                 <div class="mb-3">
                                 <label class="mb-2">Sayfa Açıklaması</label>
-                                <textarea name="page_desc" required id="desc" rows="10" cols="80">{{ old('page_desc') }}</textarea>
+                                <textarea name="page_desc" class="form-control" required id="desc" rows="10" cols="80">{{ old('page_desc') }}</textarea>
                             </div>
                             </div> <!-- end card body-->
                         </div> <!-- end card -->

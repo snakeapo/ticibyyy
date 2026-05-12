@@ -41,7 +41,9 @@
                 <a class="list-group-item list-group-item-action d-flex align-items-center{{ request()->routeIs('my_comment') ? 'pe-none active' : '' }} " href="{{ route('my_comment') }}">
                     <i class="ci-star fs-base opacity-75 me-2"></i>
                    Değerlendirmelerim
-                    <span class="badge bg-primary rounded-pill ms-auto">1</span>
+                    @if(\App\Models\Orders::where('user_id',Auth::user()->id)->where('comment',null)->count())
+                    <span class="badge bg-primary rounded-pill ms-auto">{{ \App\Models\Orders::where('user_id',Auth::user()->id)->where('comment',null)->count() }}</span>
+                    @endif
                 </a>
             </nav>
 
@@ -65,17 +67,7 @@
                 </a>
             </nav>
 
-            <nav class="list-group border rounded mt-2 list-group-borderless">
-                <h6 class="pt-4 ps-2 ms-1">Yardım</h6>
-                <a class="list-group-item list-group-item-action d-flex align-items-center" href="help-topics-v1.html">
-                    <i class="ci-help-circle fs-base opacity-75 me-2"></i>
-                    Yardım
-                </a>
-                <a class="list-group-item list-group-item-action d-flex align-items-center" href="terms-and-conditions.html">
-                    <i class="ci-info fs-base opacity-75 me-2"></i>
-                    Hizmet şartları
-                </a>
-            </nav>
+
             <nav class="list-group border rounded mt-2 list-group-borderless">
                 <a class="list-group-item list-group-item-action d-flex align-items-center" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                     <i class="ci-log-out fs-base opacity-75 me-2"></i>
@@ -88,7 +80,9 @@
         </div>
     </div>
 </aside>
-<button type="button" class="fixed-bottom z-sticky w-100 btn btn-lg btn-primary border-0 border-top border-light border-opacity-10 rounded-0 pb-4 d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#accountSidebar" aria-controls="accountSidebar" data-bs-theme="light">
-    <i class="ci-sidebar fs-base me-2"></i>
-    Hesap menüsü
-</button>
+
+    <button type="button" style="width: 100px" class="btn btn-sm mb-4 btn-dark border-0 border-top border-light border-opacity-10 rounded  d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#accountSidebar" aria-controls="accountSidebar" data-bs-theme="light">
+        <i class="ci-sidebar fs-base me-2"></i>
+        Hesabım
+    </button>
+

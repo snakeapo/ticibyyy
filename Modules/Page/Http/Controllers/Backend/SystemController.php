@@ -92,30 +92,38 @@ class SystemController extends Controller
     }
 
     //Page edit
-    public function page_update(PageUpdateRequest $request,$id)
+    public function page_update(PageUpdateRequest $request, $id)
     {
+        if (in_array($id, [1, 2, 3, 4])) {
+            return back()->with('error', 'Bu sayfa düzenlenemez!');
+        }
+
         $formData = $request->validated();
 
         $page = Pages::findOrFail($id);
 
-        if (strlen($request->page_title)>3)
-        {
-            $slug=Str::slug($request->page_title);
-        } else {
-            $slug=Str::slug($request->page_title);
-        }
+        $slug = Str::slug($request->page_title);
 
         $formData['page_slug'] = $slug;
+
         $page->update($formData);
-        return back()->with('success','Güncelleme İşlemi Başarılı!');
+
+        return back()->with('success', 'Güncelleme İşlemi Başarılı!');
     }
 
-    //Page delete
+
+// Page delete
     public function page_delete($id)
     {
+        if (in_array($id, [1, 2, 3, 4])) {
+            return back()->with('error', 'Bu sayfa silinemez!');
+        }
+
         $page = Pages::findOrFail($id);
+
         $page->delete();
-        return back()->with('success','Silme İşlemi Başarılı!');
+
+        return back()->with('success', 'Silme İşlemi Başarılı!');
     }
 
 /* ========================================================== */

@@ -53,7 +53,7 @@
                                 </div>
                                 <div class="mb-3">
                                     <label label class="mb-2">Blog Açıklaması</label>
-                                    <textarea name="blog_desc" required id="desc" rows="10" cols="80">{{ old('blog_desc') }}</textarea>
+                                    <textarea class="form-control" name="blog_desc" required id="desc" rows="10" cols="80">{{ old('blog_desc') }}</textarea>
                                 </div>
                             </div> <!-- end card body-->
                         </div> <!-- end card -->
