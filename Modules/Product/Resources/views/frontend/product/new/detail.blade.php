@@ -260,9 +260,10 @@
                             $price = $data->price;
                             $sale = $data->sale_price;
                             $hasDiscount = $sale && $sale > 0;
-                        @endphp
-
-                        <div class="h4 mb-0 me-3">
+                                        <div class="h4 mb-0 me-3" id="product-price-box"
+                             data-base-price="{{ $hasDiscount ? $sale : $price }}"
+                             data-has-discount="{{ $hasDiscount ? '1' : '0' }}"
+                             data-original-price="{{ $price }}">
 
                             @if($hasDiscount)
                                 <div class="d-flex align-items-center gap-2">
@@ -277,7 +278,7 @@
                                         {{ number_format($price, 2, ',', '.') }} ₺
                                     </span>
 
-                                          {{-- DB’den gelen indirim oranı --}}
+                                          {{-- DB'den gelen indirim oranı --}}
                                           <span class="badge bg-danger-subtle text-danger">
                                         %{{ $data->difference }}
                                     </span>
@@ -291,7 +292,7 @@
                             @endif
 
 
-                        </div>
+                        </div>                     </div>
                         @php
                             $stock = $data->stock;
                         @endphp
@@ -329,7 +330,7 @@
                             <button type="button" class="btn btn-icon btn-lg" data-decrement aria-label="Decrement quantity">
                                 <i class="ci-minus"></i>
                             </button>
-                            <input type="number" class="form-control form-control-lg" name="quantity" value="1" min="1" max="{{$data->stock}}" readonly>
+                            <input type="number" class="form-control form-control-lg" name="quantity" id="product-quantity-input" data-product-stock="{{$data->stock}}" value="1" min="1" max="{{$data->stock}}" readonly>
                             <button type="button" class="btn btn-icon btn-lg" data-increment aria-label="Increment quantity">
                                 <i class="ci-plus"></i>
                             </button>

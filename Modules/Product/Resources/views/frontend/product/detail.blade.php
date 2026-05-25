@@ -321,6 +321,86 @@
         <script>
             window.productVariants = @json($productVariants);
         </script>
+        
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const qtyInput = document.getElementById('product-quantity-input');
+                if (!qtyInput) return;
+                if (qtyInput.dataset.qtyBound === '1') return;
+                qtyInput.dataset.qtyBound = '1';
+                
+                const wrap = qtyInput.closest('.count-input');
+                const inc = wrap?.querySelector('[data-increment]');
+                const dec = wrap?.querySelector('[data-decrement]');
+                const selects = [...document.querySelectorAll('.variant-group-select')];
+                const radios = [...document.querySelectorAll('.color-options input[type="radio"]')];
+                const priceBox = document.getElementById('product-price-box');
+                
+                const formatTl = (n) => new Intl.NumberFormat('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2}).format(n) + ' ₺';
+                
+                const selectedOptions = () => {
+                    const opts = [];
+                    selects.forEach(sel => { if (sel.value) { const o=sel.options[sel.selectedIndex]; if (o) opts.push(o);} });
+                    return opts;
+                };
+                
+                const recalc = () => {
+                    const opts = selectedOptions();
+                    const stocks = opts.map(o => parseInt(o.dataset.stock || '0',10)).filter(n => !Number.isNaN(n));
+                    const variantStock = stocks.length ? Math.min(...stocks) : parseInt(qtyInput.dataset.productStock || qtyInput.max || '1', 10);
+                    const maxStock = Math.max(1, variantStock || 1);
+                    
+                    qtyInput.max = String(maxStock);
+                    qtyInput.value = String(Math.min(Math.max(1, parseInt(qtyInput.value || '1',10)), maxStock));
+                    
+                    const base = parseFloat(priceBox?.dataset.basePrice || '0');
+                    const hasDiscount = (priceBox?.dataset.hasDiscount || '0') === '1';
+                    const original = parseFloat(priceBox?.dataset.originalPrice || String(base));
+                    const variantDelta = opts.reduce((t,o)=> t + parseFloat(o.dataset.price || '0'),0);
+                    const q = parseInt(qtyInput.value,10) || 1;
+                    const live = (base + variantDelta) * q;
+                    
+                    if (priceBox) {
+                        priceBox.innerHTML = hasDiscount
+                            ? `<div class="d-flex align-items-center gap-2"><span class="text-danger fw-semibold">${formatTl(live)}</span><span class="text-muted text-decoration-line-through fs-sm">${formatTl(original*q)}</span></div>`
+                            : `<span class="fw-semibold">${formatTl(live)}</span>`;
+                    }
+                };
+                
+                inc?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    let v = parseInt(qtyInput.value || '1', 10);
+                    let max = parseInt(qtyInput.max || '1', 10);
+                    if (v < max) {
+                        qtyInput.value = String(v + 1);
+                        recalc();
+                    }
+                });
+                
+                dec?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    let v = parseInt(qtyInput.value || '1', 10);
+                    if (v > 1) {
+                        qtyInput.value = String(v - 1);
+                        recalc();
+                    }
+                });
+                
+                selects.forEach(sel => sel.addEventListener('change', recalc));
+                radios.forEach(r => r.addEventListener('change', function(){ 
+                    const n=this.name.replace('variant_',''); 
+                    const target=document.querySelector(`select[name="variants[${n}]"]`); 
+                    if(target){
+                        target.value=this.value; 
+                        target.dispatchEvent(new Event('change'));
+                    } 
+                    recalc(); 
+                }));
+                recalc();
+            });
+        </script>
 
     @endsection
 @endsection
